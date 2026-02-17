@@ -1,36 +1,31 @@
-# Laravel API Starter Template
+<div align="center">
+  <a href="https://github.com/Ra1deN-wcyd">
+    <img src="https://img.shields.io/badge/Ra1deN.wcyd-Project-blue?style=for-the-badge&logo=github" alt="Ra1deN Logo">
+  </a>
+</div>
 
-This is a **Laravel API-only starter template** intended for students to build their own projects. 
+# Austify — AUST CSE Community
 
-The backend is fully prepared for RESTful API development, and students are expected to create a frontend separately in a `client` folder.
+## Team
 
----
+- **Tamjid Ahmed Khan** — ID: 20230104044 — *Lead & Backend*
+- **SM Imtiaz Hasan** — ID: 20230104045 — *Backend*
+- **ABM Raisul Hasan Ratul** — ID: 20230104042 — *Frontend*
+- **Tawsif Arefin Abir** — ID: 20230104035 — *Frontend*
 
-## Features
+## Project Overview
 
-- Laravel 10 backend
-- API routes only (no Blade templates)
-- Sanctum authentication setup (optional)
-- Ready for React or other frontend clients
-- Example routes and controllers to get started
+Austify is a community website for AUST CSE students where they can post problems, find project buddies, chat with one another, upload files (for example previous semester questions and solutions), and earn points toward gaining adminship.
 
----
+## Core Features
 
-## Prerequisites
+- Post problems and questions
+- Find project collaborators
+- Real-time chat between students
+- Upload & share files (previous semester questions & solutions)
+- Points system and role elevation (adminship)
 
-Make sure you have the following installed:
+## Current Status (Checkpoint)
 
-- PHP >= 8.1
-- Composer
-- MySQL / PostgreSQL / SQLite
-- Node.js and npm/yarn (for the frontend client)
-
----
-
-## Installation
-
-1. **Clone the repository**
-
-```bash
-git clone <repository-url>
-cd <project-folder>
+- **First checkpoint:** Login & Register
+- **Authentication:** In progress
