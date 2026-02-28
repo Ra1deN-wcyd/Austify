@@ -10,6 +10,13 @@ class TestMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
+        // Check if the header exists and matches our secret
+        if ($request->header('X-API-TOKEN') !== 'my-secret-token') {
+            return response()->json([
+                'message' => 'Unauthorized. Please provide a valid X-API-TOKEN header.'
+            ], 401);
+        }
+
         return $next($request);
     }
 }
