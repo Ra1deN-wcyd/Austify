@@ -56,4 +56,20 @@ class User extends Authenticatable
     {
         return $this->role === 'admin';
     }
+
+/**
+ * Relationship: One user can write many comments.
+ */
+public function comments()
+{
+    return $this->hasMany(Comment::class);
+}
+
+public function likes()
+{
+    return $this->hasMany(Like::class);
+}
+
+
+
 }
