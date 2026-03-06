@@ -50,7 +50,7 @@
             localStorage.setItem('user_name', result.user.name);
             localStorage.setItem('user_id', result.user.id);
             
-            window.location.href = '/home'; 
+            window.location.href = '/'; 
         } else {
             alert(result.message || "Invalid credentials. Please try again.");
         }
