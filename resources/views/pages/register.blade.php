@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+
 <div class="d-flex align-items-center justify-content-center" style="min-height: 90vh; background-color: #1a202c;">
     <div class="card shadow-lg border-0" style="width: 100%; max-width: 450px; background-color: #ffffff; border-radius: 12px;">
         <div class="card-body p-5">
@@ -14,22 +15,22 @@
 
                 <div class="mb-3">
                     <label class="form-label fw-semibold" style="color: #4a5568;">Full Name</label>
-                    <input type="text" id="name" class="form-control p-2 border-secondary-subtle" placeholder="Enter your name" required>
+                    <input type="text" id="name" class="form-control p-2" placeholder="Enter your name" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-semibold" style="color: #4a5568;">Email Address</label>
-                    <input type="email" id="email" class="form-control p-2 border-secondary-subtle" placeholder="name@example.com" required>
+                    <input type="email" id="email" class="form-control p-2" placeholder="name@example.com" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-semibold" style="color: #4a5568;">GitHub Link (Optional)</label>
-                    <input type="url" id="github_link" class="form-control p-2 border-secondary-subtle" placeholder="https://github.com/yourprofile">
+                    <input type="url" id="github_link" class="form-control p-2" placeholder="https://github.com/yourprofile">
                 </div>
 
                 <div class="mb-4">
                     <label class="form-label fw-semibold" style="color: #4a5568;">Password</label>
-                    <input type="password" id="password" class="form-control p-2 border-secondary-subtle" placeholder="Min 8 characters" required>
+                    <input type="password" id="password" class="form-control p-2" placeholder="Min 8 characters" required>
                 </div>
 
                 <button type="submit" class="btn w-100 fw-bold py-2 text-white" style="background-color: #48bb78; border: none;">
@@ -38,20 +39,18 @@
 
             </form>
 
-            <!-- Success Message -->
+            <!-- success message -->
             <div id="messageBox" class="text-center mt-3" style="display:none;">
                 <div class="alert alert-success">
-                    Registration successful! Redirecting to home page in 
-                    <strong><span id="countdown">3</span></strong> seconds...
+                    Registration successful! Redirecting in
+                    <strong><span id="countdown">2</span></strong> seconds...
                 </div>
             </div>
 
             <div class="text-center mt-4">
                 <p class="small text-muted">
                     Already have an account?
-                    <a href="/login" class="fw-bold text-decoration-none" style="color: #48bb78;">
-                        Log in here
-                    </a>
+                    <a href="/login" class="fw-bold text-decoration-none" style="color: #48bb78;">Log in here</a>
                 </p>
             </div>
 
@@ -61,20 +60,19 @@
 
 <script>
 document.getElementById('registerForm').addEventListener('submit', async (e) => {
-
     e.preventDefault();
 
     const response = await fetch('/api/accounts/register', {
         method: 'POST',
-        headers: { 
+        headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         },
         body: JSON.stringify({
-            name: document.getElementById('name').value,
-            email: document.getElementById('email').value,
+            name:        document.getElementById('name').value,
+            email:       document.getElementById('email').value,
             github_link: document.getElementById('github_link').value,
-            password: document.getElementById('password').value
+            password:    document.getElementById('password').value
         })
     });
 
@@ -82,38 +80,31 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
 
     if (response.ok) {
 
-        // 👇 two lines — name + token
-        localStorage.setItem('user_name', document.getElementById('name').value);
-        localStorage.setItem('austify_token', result.token);  // 👈 added this
+        // save all user data to localStorage
+        localStorage.setItem('user_name',     document.getElementById('name').value);
+        localStorage.setItem('user_email',    document.getElementById('email').value);
+        localStorage.setItem('user_github',   document.getElementById('github_link').value);
+        localStorage.setItem('austify_token', result.token);
 
         // hide form
         document.getElementById('registerForm').style.display = 'none';
 
-        // show success message
-        const messageBox = document.getElementById('messageBox');
-        messageBox.style.display = 'block';
+        // show countdown
+        document.getElementById('messageBox').style.display = 'block';
 
         let count = 2;
-        const countdown = document.getElementById('countdown');
-
         const timer = setInterval(() => {
-
             count--;
-            countdown.textContent = count;
-
+            document.getElementById('countdown').textContent = count;
             if (count === 0) {
                 clearInterval(timer);
                 window.location.href = '/home';
             }
-
         }, 1000);
 
     } else {
-
         alert("Registration failed: " + JSON.stringify(result));
-
     }
-
 });
 </script>
 
