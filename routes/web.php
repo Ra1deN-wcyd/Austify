@@ -32,4 +32,9 @@ Route::get('/home',function(){
 })->name('home');
 
 
+Route::get('/profile',function(){
+    return view('pages.profile');
+})->name('profile');
+
+
 
