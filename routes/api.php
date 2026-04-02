@@ -6,6 +6,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\CollaborationController;
 use App\Http\Controllers\CollaborationRequestController;
+use App\Http\Controllers\VideoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -110,7 +111,17 @@ Route::prefix('collaboration-requests')->group(function () {
     // Work: Creator rejects a join request
     Route::post('/{id}/rejection', [CollaborationRequestController::class, 'reject']);
 
+
+
+
 });
+
+//for share resources
+
+    Route::get('/videos', [VideoController::class, 'index']);
+
+    // To add a new video
+    Route::post('/videos', [VideoController::class, 'store']);
 
 
 
