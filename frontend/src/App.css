@@ -1,0 +1,44 @@
+/* Austify Component Styles */
+
+/* Navbar hover effect - matching backend navbar.blade.php */
+.nav-link {
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+.nav-link:hover {
+  background-color: #198754;
+  color: white !important;
+  padding: 6px 12px;
+}
+
+/* Profile cover gradient */
+.profile-cover {
+  height: 120px;
+  background: linear-gradient(135deg, #1a4731, #48bb78, #2d6a4f);
+}
+
+/* Button hover effects */
+.btn-success {
+  transition: all 0.3s;
+}
+
+.btn-success:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+}
+
+/* Card hover effects */
+.card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Footer stays at bottom */
+footer {
+  margin-top: auto !important;
+}
