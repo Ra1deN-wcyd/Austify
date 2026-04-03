@@ -1,31 +1,90 @@
-<div align="center">
-  <a href="https://github.com/Ra1deN-wcyd">
-    <img src="https://img.shields.io/badge/Ra1deN.wcyd-Project-blue?style=for-the-badge&logo=github" alt="Ra1deN Logo">
-  </a>
-</div>
+<div align="center"> <a href="https://github.com/Ra1deN-wcyd"> <img src="https://img.shields.io/badge/Ra1deN.wcyd-Project-blue?style=for-the-badge&logo=github" alt="Ra1deN Logo"> </a> </div>
+🚀 Austify — AUST CSE Community Platform
+👥 Team
+Tamjid Ahmed Khan — Lead & Backend Engineer
+ID: 20230104044
 
-# Austify — AUST CSE Community
+SM Imtiaz Hasan — Backend Developer
+ID: 20230104045
 
-## Team
+ABM Raisul Hasan Ratul — Frontend Developer
+ID: 20230104042
 
-- **Tamjid Ahmed Khan** — ID: 20230104044 — *Lead & Backend*
-- **SM Imtiaz Hasan** — ID: 20230104045 — *Backend*
-- **ABM Raisul Hasan Ratul** — ID: 20230104042 — *Frontend*
-- **Tawsif Arefin Abir** — ID: 20230104035 — *Frontend*
+Tawsif Arefin Abir — Frontend Developer
+ID: 20230104035
 
-## Project Overview
+📌 Project Overview
+Austify is a centralized community platform designed for AUST CSE students, enabling collaboration, knowledge sharing, and real-time communication in one place.
 
-Austify is a community website for AUST CSE students where they can post problems, find project buddies, chat with one another, upload files (for example previous semester questions and solutions), and earn points toward gaining adminship.
+Users can post problems, find project collaborators, share resources, and interact instantly through live chat.
 
-## Core Features
+🛠️ Tech Stack
+🔙 Backend
+PHP (Laravel Framework)
 
-- Post problems and questions
-- Find project collaborators
-- Real-time chat between students
-- Upload & share files (previous semester questions & solutions)
-- Points system and role elevation (adminship)
+RESTful API
 
-## Current Status (Checkpoint)
+Authentication & authorization system
 
-- **First checkpoint:** Login & Register
-- **Authentication:** In progress
+🎨 Frontend
+React.js
+
+Component-based architecture
+
+State management for dynamic UI
+
+🗄️ Database
+Microsoft SQL Server (SSMS)
+
+Relational database design
+
+⚡ Real-Time Communication
+Pusher (WebSocket Service)
+
+Event broadcasting via Laravel
+
+Live chat and instant updates
+
+✨ Core Features
+🧠 Problem Posting System
+Students can post and solve academic problems
+
+🤝 Collaborator Finder
+Find teammates for projects and research
+
+💬 Real-Time Chat (Powered by Pusher)
+Instant messaging between users
+
+📚 Resource Sharing
+Upload lecture videos, notes, and past questions
+
+🏆 Points & Role System
+Earn points and unlock admin privileges
+
+📊 Development Progress
+✅ Checkpoint 1: Authentication (Completed)
+User Registration
+
+Login
+
+Profile Creation
+
+Update Profile
+
+Logout
+
+🚧 Checkpoint 2: Core Features (In Progress)
+Problem Posting Module
+
+Collaborator/Buddy Finder
+
+Course Resources (Lecture Videos)
+
+Real-Time Chat Integration (Pusher)
+
+🔜 Checkpoint 3: Finalization
+Bug Fixing
+
+Performance Optimization
+
+Deployment
