@@ -70,6 +70,9 @@ public function likes()
     return $this->hasMany(Like::class);
 }
 
-
+public function conversations()
+{
+    return $this->belongsToMany(Conversation::class);
+}
 
 }
