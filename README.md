@@ -1,6 +1,8 @@
 <div align="center"> <a href="https://github.com/Ra1deN-wcyd"> <img src="https://img.shields.io/badge/Ra1deN.wcyd-Project-blue?style=for-the-badge&logo=github" alt="Ra1deN Logo"> </a> </div>
 🚀 Austify — AUST CSE Community Platform
+
 👥 Team
+
 Tamjid Ahmed Khan — Lead & Backend Engineer
 ID: 20230104044
 
