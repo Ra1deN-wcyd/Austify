@@ -3,7 +3,7 @@
 
 👥 Team
 
-Tamjid Ahmed Khan — Lead & Backend Engineer
+Tamjid Ahmed Khan — Lead & Backend 
 ID: 20230104044
 
 SM Imtiaz Hasan — Backend Developer
