@@ -1,8 +1,8 @@
-
 <?php
 
 use Illuminate\Support\Facades\Route;
 
+<<<<<<< Updated upstream
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -33,3 +33,8 @@ Route::get('/home',function(){
 
 
 
+=======
+Route::get('/{any}', function () {
+    return view('layouts.app');
+})->where('any', '.*');
+>>>>>>> Stashed changes
