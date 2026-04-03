@@ -1,87 +1,105 @@
-<div align="center"> <a href="https://github.com/Ra1deN-wcyd"> <img src="https://img.shields.io/badge/Ra1deN.wcyd-Project-blue?style=for-the-badge&logo=github" alt="Ra1deN Logo"> </a> </div>
-🚀 Austify — AUST CSE Community Platform
+<div align="center">
+  <a href="https://github.com/Ra1deN-wcyd">
+    <img src="https://img.shields.io/badge/Ra1deN.wcyd-Project-blue?style=for-the-badge&logo=github" alt="Ra1deN Logo">
+  </a>
+</div>
 
-👥 Team
+<h1 align="center">🚀 Austify — AUST CSE Community Platform</h1>
 
-Tamjid Ahmed Khan — Lead & Backend 
-ID: 20230104044
+<p align="center">
+  A collaborative platform for AUST CSE students to connect, share knowledge, and communicate in real-time.
+</p>
 
-SM Imtiaz Hasan — Backend Developer
-ID: 20230104045
+---
 
-ABM Raisul Hasan Ratul — Frontend Developer
-ID: 20230104042
+## 👥 Team
 
-Tawsif Arefin Abir — Frontend Developer
-ID: 20230104035
+| Name | Role | ID |
+|------|------|----|
+| Tamjid Ahmed Khan | Lead & Backend Engineer | 20230104044 |
+| SM Imtiaz Hasan | Backend Developer | 20230104045 |
+| ABM Raisul Hasan Ratul | Frontend Developer | 20230104042 |
+| Tawsif Arefin Abir | Frontend Developer | 20230104035 |
 
-📌 Project Overview
-Austify is a centralized community platform designed for AUST CSE students, enabling collaboration, knowledge sharing, and real-time communication in one place.
+---
 
-Users can post problems, find project collaborators, share resources, and interact instantly through live chat.
+## 📌 Project Overview
 
-🛠️ Tech Stack
-🔙 Backend
-PHP (Laravel Framework)
+**Austify** is a centralized community platform designed for **AUST CSE students**.  
+It enables students to collaborate, solve problems, share academic resources, and communicate in real-time.
 
-RESTful API
+---
 
-Authentication & authorization system
+## 🛠️ Tech Stack
 
-🎨 Frontend
-React.js
+### 🔙 Backend
+- PHP (Laravel Framework)
+- RESTful API
+- Authentication & Authorization
 
-Component-based architecture
+### 🎨 Frontend
+- React.js
+- Component-based architecture
+- Dynamic UI rendering
 
-State management for dynamic UI
+### 🗄️ Database
+- Microsoft SQL Server (SSMS)
 
-🗄️ Database
-Microsoft SQL Server (SSMS)
+### ⚡ Real-Time Communication
+- Pusher (WebSocket Service)
+- Laravel Broadcasting
+- Event-driven architecture
 
-Relational database design
+---
 
-⚡ Real-Time Communication
-Pusher (WebSocket Service)
+## ✨ Features
 
-Event broadcasting via Laravel
+- 🧠 Problem Posting & Discussion  
+- 🤝 Collaborator / Buddy Finder  
+- 💬 Real-Time Chat (Pusher)  
+- 📚 Resource Sharing (Lectures, Notes, Questions)  
+- 🏆 Points System & Role Upgrade  
 
-Live chat and instant updates
+---
 
-✨ Core Features
-🧠 Problem Posting System
-Students can post and solve academic problems
+## 📊 Development Progress
 
-🤝 Collaborator Finder
-Find teammates for projects and research
+### ✅ Checkpoint 1: Authentication (Completed)
+- [x] User Registration  
+- [x] Login System  
+- [x] Profile Creation  
+- [x] Update Profile  
+- [x] Logout  
 
-💬 Real-Time Chat (Powered by Pusher)
-Instant messaging between users
+---
 
-📚 Resource Sharing
-Upload lecture videos, notes, and past questions
+### 🚧 Checkpoint 2: Core Features (In Progress)
+- [ ] Problem Posting Module  
+- [ ] Collaborator Finder  
+- [ ] Resource Sharing (Lecture Videos)  
+- [ ] Real-Time Chat System (Pusher Integration)  
 
-🏆 Points & Role System
-Earn points and unlock admin privileges
+---
 
-📊 Development Progress
+### 🔜 Checkpoint 3: Final Stage
+- [ ] Bug Fixing  
+- [ ] Performance Optimization  
+- [ ] Deployment  
 
-✅ Checkpoint 1:
-Authentication (Completed)
-User Registration
-Login
-Profile Creation
-Update Profile
-Logout
+---
 
+## 🎯 Future Improvements
 
-🚧 Checkpoint 2: Core Features 
-Problem Posting Module
-Collaborator/Buddy Finder
-Course Resources (Lecture Videos)
-Real-Time Chat Integration (Pusher)
+- 🔔 Real-time Notifications  
+- 🔍 Advanced Search & Filters  
+- 🛠️ Admin Dashboard  
+- 📱 Mobile Responsive UI  
 
+---
 
-🔜 Checkpoint 3: Finalization
-Bug Fixing
-Performance Optimization
-Deployment
+## ⚙️ Installation (Coming Soon)
+
+```bash
+# Clone the repository
+git clone https://github.com/your-username/austify.git
+
