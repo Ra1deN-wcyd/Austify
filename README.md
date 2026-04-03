@@ -64,29 +64,24 @@ Upload lecture videos, notes, and past questions
 Earn points and unlock admin privileges
 
 📊 Development Progress
-✅ Checkpoint 1: Authentication (Completed)
+
+✅ Checkpoint 1:
+Authentication (Completed)
 User Registration
-
 Login
-
 Profile Creation
-
 Update Profile
-
 Logout
 
-🚧 Checkpoint 2: Core Features (In Progress)
+
+🚧 Checkpoint 2: Core Features 
 Problem Posting Module
-
 Collaborator/Buddy Finder
-
 Course Resources (Lecture Videos)
-
 Real-Time Chat Integration (Pusher)
+
 
 🔜 Checkpoint 3: Finalization
 Bug Fixing
-
 Performance Optimization
-
 Deployment
