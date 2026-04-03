@@ -6,6 +6,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\CollaborationController;
 use App\Http\Controllers\CollaborationRequestController;
+use App\Http\Controllers\VideoController;
 use App\Http\Controllers\ChatController;
 
 /*
@@ -102,6 +103,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}/requests', [CollaborationRequestController::class, 'index']);
 
     });
+
+
+
+
+});
+
+//for share resources
+
+    Route::get('/videos', [VideoController::class, 'index']);
+
+    // To add a new video
+    Route::post('/videos', [VideoController::class, 'store']);
 
     Route::prefix('collaboration-requests')->group(function () {
         Route::post('/{id}/acceptance', [CollaborationRequestController::class, 'accept']);
