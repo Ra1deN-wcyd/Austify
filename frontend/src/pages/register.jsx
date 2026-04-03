@@ -18,10 +18,13 @@ export default function Register() {
         setError("");
         try {
             const res = await api.post("/accounts/register", { name, email, github_link: github, password });
-            localStorage.setItem("user_name", name);
+            
+            // Store token and user info
+            localStorage.setItem("austify_token", res.data.token);
+            localStorage.setItem("user_name", res.data.user.name);
+            localStorage.setItem("user_id", res.data.user.id);
             localStorage.setItem("user_email", email);
             localStorage.setItem("user_github", github);
-            localStorage.setItem("austify_token", res.data.token || "");
 
             setSuccess(true);
             let count = 2;
@@ -30,20 +33,23 @@ export default function Register() {
                 setCountdown(count);
                 if (count === 0) {
                     clearInterval(timer);
+                    // Force navbar to update by triggering storage event
                     window.dispatchEvent(new Event("storage"));
                     navigate("/home");
                 }
             }, 1000);
         } catch (err) {
             const errData = err.response?.data;
-            if (typeof errData === "object") {
-                const messages = Object.values(errData).flat().join(", ");
+            if (errData && typeof errData === "object") {
+                // Flatten and join error messages for display
+                const messages = Object.keys(errData).map(key => `${key}: ${errData[key]}`).join(", ");
                 setError(messages);
             } else {
-                setError("Registration failed. Please try again.");
+                setError(err.response?.data?.message || "Registration failed. Please check your details.");
             }
         }
     };
+
 
     return (
         <div className="d-flex align-items-center justify-content-center" style={{ minHeight: "90vh", backgroundColor: "#1a202c" }}>
