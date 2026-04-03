@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 @extends('layouts.app')
 
 @section('content')
@@ -109,3 +110,5 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
 </script>
 
 @endsection
+=======
+>>>>>>> Stashed changes
