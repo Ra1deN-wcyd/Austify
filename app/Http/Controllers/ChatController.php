@@ -66,10 +66,11 @@ class ChatController extends Controller
      */
     public function start(Request $request)
     {
+        // Validate input
         $request->validate([
             'user_id' => 'required|exists:users,id',
         ]);
-
+// Prevent starting a conversation with oneself
         $recipientId   = $request->user_id;
         $currentUserId = Auth::id();
 
@@ -78,11 +79,13 @@ class ChatController extends Controller
                 'error' => 'You cannot start a conversation with yourself.',
             ], 400);
         }
+//not creating duplicate conversations between the same two users
 
         $conversation = Conversation::whereHas('users', fn($q) => $q->where('user_id', $currentUserId))
             ->whereHas('users', fn($q) => $q->where('user_id', $recipientId))
             ->with('users')
             ->first();
+//if no existing conversation, create a new one and attach both users
 
         if (!$conversation) {
             $conversation = Conversation::create();
@@ -101,6 +104,7 @@ class ChatController extends Controller
      */
     public function store(Request $request)
     {
+        // Validate input
         $request->validate([
             'conversation_id' => 'required|exists:conversations,id',
             'body'            => 'required|string|max:1000',
@@ -108,10 +112,12 @@ class ChatController extends Controller
 
         $conversation = Conversation::findOrFail($request->conversation_id);
 
+// Ensure the user is part of this conversation
+
         if (!$conversation->users()->where('user_id', Auth::id())->exists()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
-
+// Create the message and broadcast it to others in the conversation
         $message = Message::create([
             'conversation_id' => $conversation->id,
             'user_id'         => Auth::id(),
