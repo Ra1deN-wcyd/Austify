@@ -132,7 +132,7 @@ function Navbar() {
                                 <Link className="nav-link" to="/problem">Problem</Link>
                             </li>
                             <li className="nav-item">
-                                <a className="nav-link" href="#">Resources</a>
+                                <Link className="nav-link" to="/resources">Resources</Link>
                             </li>
 
                             <div className="d-flex align-items-center ms-lg-3 gap-2">
