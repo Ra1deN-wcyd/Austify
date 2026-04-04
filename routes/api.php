@@ -104,13 +104,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     });
 
-
-
-
-});
-
-//for share resources
-
     Route::get('/videos', [VideoController::class, 'index']);
 
     // To add a new video
@@ -120,6 +113,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}/acceptance', [CollaborationRequestController::class, 'accept']);
         Route::post('/{id}/rejection', [CollaborationRequestController::class, 'reject']);
     });
+
+
+
+
+});
+
+//for share resources videos
+
+    
 
     // Real-Time Chat API
     Route::prefix('chat')->group(function () {
@@ -155,4 +157,3 @@ Route::middleware('auth:sanctum')->group(function () {
 
     });
 
-});
