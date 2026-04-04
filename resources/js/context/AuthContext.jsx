@@ -9,15 +9,15 @@ export function AuthProvider({ children }) {
 
     // Restore session on page load
     useEffect(() => {
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem("austify_token"); // ✅ fixed key
         if (token) {
-            api.get("/api/accounts/my-profile")
+            api.get("/accounts/my-profile") // ✅ removed /api/
                 .then((res) => {
                     const data = res.data.data ?? res.data;
                     setUser(data);
                 })
                 .catch(() => {
-                    localStorage.removeItem("token");
+                    localStorage.clear();
                     setUser(null);
                 })
                 .finally(() => setLoading(false));
@@ -27,20 +27,24 @@ export function AuthProvider({ children }) {
     }, []);
 
     const login = async (email, password) => {
-        const res = await api.post("/api/accounts/login", { email, password });
+        const res = await api.post("/accounts/login", { email, password }); // ✅ removed /api/
         const { token, user: userData } = res.data;
-        localStorage.setItem("token", token);
+        localStorage.setItem("austify_token", token); // ✅ fixed key
+        localStorage.setItem("user_name", userData.name);
+        localStorage.setItem("user_id", userData.id);
+        localStorage.setItem("user_email", userData.email);
+        localStorage.setItem("user_github", userData.github_link || "");
         setUser(userData);
         return res.data;
     };
 
     const logout = async () => {
         try {
-            await api.post("/api/accounts/logout");
+            await api.post("/accounts/logout"); // ✅ removed /api/
         } catch (err) {
             // silent fail
         } finally {
-            localStorage.removeItem("token");
+            localStorage.clear();
             setUser(null);
         }
     };

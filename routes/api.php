@@ -63,7 +63,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // URL: http://127.0.0.1:8000/api/post/like/{id}
         Route::post('/like/{id}', [PostController::class, 'toggleLike']);
         
-    });
+    }); // ← closes Route::prefix('post')
 
     Route::prefix('collaborations')->group(function () {
 
@@ -102,7 +102,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Work: Creator views join requests
         Route::get('/{id}/requests', [CollaborationRequestController::class, 'index']);
 
-    });
+    }); // ← closes Route::prefix('collaborations')
 
 
 
@@ -118,7 +118,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('collaboration-requests')->group(function () {
         Route::post('/{id}/acceptance', [CollaborationRequestController::class, 'accept']);
         Route::post('/{id}/rejection', [CollaborationRequestController::class, 'reject']);
-    });
+    }); // ← closes Route::prefix('collaboration-requests')
 
     // Real-Time Chat API
     Route::prefix('chat')->group(function () {
@@ -152,6 +152,6 @@ Route::middleware('auth:sanctum')->group(function () {
         //       Frontend listens via Echo.private(`conversation.{id}`).listen('.user.typing', ...)
         Route::post('/typing', [ChatController::class, 'typing']);
 
-    });
+    }); // ← closes Route::prefix('chat')
 
-});
+}); // ← closes Route::middleware('auth:sanctum')

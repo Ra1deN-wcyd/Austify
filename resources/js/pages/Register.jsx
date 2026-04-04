@@ -1,23 +1,23 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/api';
-import { useAuth } from '../context/AuthContext';
 
 function Register() {
-    const { setUser } = useAuth();
     const navigate = useNavigate();
     const [form, setForm] = useState({ name: '', email: '', github_link: '', password: '' });
     const [success, setSuccess] = useState(false);
     const [countdown, setCountdown] = useState(2);
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setLoading(true);
         try {
-            await api.post('/api/accounts/register', form);
+            await api.post('/accounts/register', form); // ✅ removed /api/
             setSuccess(true);
             let count = 2;
             const timer = setInterval(() => {
@@ -27,6 +27,8 @@ function Register() {
             }, 1000);
         } catch (err) {
             setError(err.response?.data?.message || JSON.stringify(err.response?.data || 'Registration failed.'));
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -61,8 +63,9 @@ function Register() {
                                 <input type="password" name="password" className="form-control p-2" placeholder="Min 8 characters"
                                     value={form.password} onChange={handleChange} required />
                             </div>
-                            <button type="submit" className="btn w-100 fw-bold py-2 text-white" style={{ backgroundColor: '#48bb78', border: 'none' }}>
-                                Create Account
+                            <button type="submit" className="btn w-100 fw-bold py-2 text-white"
+                                style={{ backgroundColor: '#48bb78', border: 'none' }} disabled={loading}>
+                                {loading ? 'Creating account...' : 'Create Account'}
                             </button>
                             {error && <div className="alert alert-danger mt-3">{error}</div>}
                         </form>
@@ -75,7 +78,9 @@ function Register() {
                     <div className="text-center mt-4">
                         <p className="small text-muted">
                             Already have an account?{' '}
-                            <Link to="/login" className="fw-bold text-decoration-none" style={{ color: '#48bb78' }}>Log in here</Link>
+                            <Link to="/login" className="fw-bold text-decoration-none" style={{ color: '#48bb78' }}>
+                                Log in here
+                            </Link>
                         </p>
                     </div>
                 </div>
