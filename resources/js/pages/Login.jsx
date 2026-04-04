@@ -8,15 +8,19 @@ function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setLoading(true);
         try {
             await login(email, password);
             navigate('/home');
         } catch (err) {
             setError(err.response?.data?.message || 'Invalid credentials. Please try again.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -40,8 +44,9 @@ function Login() {
                             <input type="password" className="form-control p-2" placeholder="••••••••"
                                 value={password} onChange={e => setPassword(e.target.value)} required />
                         </div>
-                        <button type="submit" className="btn w-100 fw-bold py-2 text-white" style={{ backgroundColor: '#48bb78', border: 'none' }}>
-                            Sign In
+                        <button type="submit" className="btn w-100 fw-bold py-2 text-white"
+                            style={{ backgroundColor: '#48bb78', border: 'none' }} disabled={loading}>
+                            {loading ? 'Signing in...' : 'Sign In'}
                         </button>
                     </form>
 
@@ -50,7 +55,9 @@ function Login() {
                     <div className="text-center mt-4">
                         <p className="small text-muted">
                             New to the community?{' '}
-                            <Link to="/register" className="fw-bold text-decoration-none" style={{ color: '#48bb78' }}>Create an account</Link>
+                            <Link to="/register" className="fw-bold text-decoration-none" style={{ color: '#48bb78' }}>
+                                Create an account
+                            </Link>
                         </p>
                     </div>
                 </div>
