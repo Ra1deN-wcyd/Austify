@@ -107,7 +107,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 
-});
 
 //for share resources
 
