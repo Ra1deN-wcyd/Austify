@@ -15,7 +15,7 @@ function Profile() {
 
     const loadProfile = async () => {
         try {
-            const res = await api.get('/api/accounts/my-profile');
+            const res = await api.get('/accounts/my-profile');
             const u = res.data.data;
             setUser(u);
             setName(u.name || '');
@@ -32,7 +32,7 @@ function Profile() {
         if (!name.trim()) return showToast('Name cannot be empty.', true);
         setSaving(true);
         try {
-            const res = await api.post('/api/accounts/update-profile', { name, github_link: github || null });
+            const res = await api.post('/accounts/update-profile', { name, github_link: github || null });
             setUser(res.data.data);
             setEditMode(false);
             showToast('✅ Profile updated!');
