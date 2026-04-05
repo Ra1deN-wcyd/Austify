@@ -1,4 +1,4 @@
-import "bootstrap/dist/css/bootstrap.min.css";  // ← add this line
+import "bootstrap/dist/css/bootstrap.min.css";
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
@@ -12,6 +12,7 @@ import Home from './pages/Home';
 import Profile from './pages/Profile';
 import Collaborations from './pages/Collaborations';
 import Chat from './pages/Chat';
+import Problem from './pages/Problem';
 
 function App() {
     return (
@@ -26,6 +27,7 @@ function App() {
                     <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
                     <Route path="/collaborations" element={<PrivateRoute><Collaborations /></PrivateRoute>} />
                     <Route path="/chat" element={<PrivateRoute><Chat /></PrivateRoute>} />
+                    <Route path="/problem" element={<PrivateRoute><Problem /></PrivateRoute>} />
                 </Routes>
             </Router>
         </AuthProvider>

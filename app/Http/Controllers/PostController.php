@@ -12,14 +12,19 @@ class PostController extends Controller
     // 1. Show all posts (The Wall)
     public function index()
     {
-        // We add 'withCount' so every post automatically has a 'likes_count' attribute
+        // Fetch posts with users, comments, and comment authors
         $posts = Post::with([
             'user:id,name', 
             'comments.user:id,name'
         ])
         ->withCount('likes') 
         ->latest()
-        ->get();
+        ->get()
+        ->map(function ($post) {
+            // Count reactions by type (optional but useful)
+            // For now, we'll just return the total count as likes_count
+            return $post;
+        });
 
         return response()->json($posts);
     }
@@ -42,42 +47,53 @@ class PostController extends Controller
         ], 201);
     }
 
-    // 3. Like / Unlike Toggle
-    public function toggleLike($id)
+    // 3. Multi-Reaction Toggle
+    public function toggleLike($id, Request $request)
     {
         $post = Post::findOrFail($id);
         $user = Auth::user();
+        $type = $request->input('type', 'like'); // default to 'like'
 
-        // Check if this specific user already liked this specific post
-        $existingLike = $post->likes()->where('user_id', $user->id)->first();
+        // Check if this specific user already has ANY reaction on this specific post
+        $existingReaction = $post->likes()->where('user_id', $user->id)->first();
 
-        if ($existingLike) {
-            $existingLike->delete(); // Unlike it
+        if ($existingReaction) {
+            // If the reaction is the SAME type, delete it (unlike)
+            if ($existingReaction->type === $type) {
+                $existingReaction->delete();
+                return response()->json([
+                    'message' => 'Removed ' . $type, 
+                    'likes_count' => $post->likes()->count()
+                ]);
+            }
+            // If the reaction is a DIFFERENT type, update it
+            $existingReaction->update(['type' => $type]);
             return response()->json([
-                'message' => 'Unliked', 
+                'message' => 'Updated to ' . $type, 
                 'likes_count' => $post->likes()->count()
             ]);
         }
 
-        // Otherwise, Create a new like
+        // Otherwise, create a new reaction
         $post->likes()->create([
-            'user_id' => $user->id
+            'user_id' => $user->id,
+            'type' => $type
         ]);
 
         return response()->json([
-            'message' => 'Liked!', 
+            'message' => 'Reacted with ' . $type, 
             'likes_count' => $post->likes()->count()
         ]);
     }
 
-    // 4. Delete a post
+    // 4. Delete a post (Owner or Admin)
     public function destroy($id)
     {
         $post = Post::findOrFail($id);
         $user = Auth::user();
 
-        // Admin or Owner check
-        if ($user->role === 'admin' || $user->id === $post->user_id) {
+        // Check if the user is the owner or an admin
+        if ($user->id === $post->user_id || $user->role === 'admin') {
             $post->delete(); 
             return response()->json(['message' => 'Post deleted successfully']);
         }
