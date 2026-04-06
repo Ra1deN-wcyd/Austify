@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import api from '../api/api';
 
 const courseMap = {
@@ -14,13 +14,16 @@ const courseMap = {
 
 const semesters = ["1.1", "1.2", "2.1", "2.2", "3.1", "3.2", "4.1", "4.2"];
 
+/**
+ * Extracts a YouTube embeddable URL from various formats.
+ */
 function getEmbedUrl(url) {
     if (!url) return '';
     try {
-        const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+        const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
         const match = url.match(regExp);
-        return match && match[2] && match[2].length === 11
-            ? 'https://www.youtube.com/embed/' + match[2]
+        return match && match[1]
+            ? 'https://www.youtube.com/embed/' + match[1]
             : url;
     } catch {
         return url;
@@ -30,6 +33,7 @@ function getEmbedUrl(url) {
 export default function Resources() {
     const [semester, setSemester] = useState(null);
     const [course, setCourse] = useState(null);
+    const [courseSearch, setCourseSearch] = useState('');
     const [videos, setVideos] = useState([]);
     const [loading, setLoading] = useState(false);
     const [fetchError, setFetchError] = useState(null);
@@ -53,21 +57,29 @@ export default function Resources() {
         setFetchError(null);
         setActiveVideo(null);
         try {
-            const res = await api.get('/api/videos', {
+            const res = await api.get('/videos', {
                 params: { semester: sem, course: crs }
             });
             setVideos(Array.isArray(res.data) ? res.data : []);
         } catch (err) {
             console.error('Failed to load videos:', err);
-            setFetchError('Could not load videos. Please try again.');
+            setFetchError('Could not load videos. Please check your connection.');
         } finally {
             setLoading(false);
         }
     }
 
+    const filteredCourses = useMemo(() => {
+        if (!semester) return [];
+        return (courseMap[semester] || []).filter(c => 
+            c.toLowerCase().includes(courseSearch.toLowerCase())
+        );
+    }, [semester, courseSearch]);
+
     function handleSemesterClick(s) {
         setSemester(s);
         setCourse(null);
+        setCourseSearch('');
         setVideos([]);
         setActiveVideo(null);
         setFetchError(null);
@@ -77,6 +89,11 @@ export default function Resources() {
         setCourse(c);
         setActiveVideo(null);
         setFetchError(null);
+        // Better scrolling to the video section
+        setTimeout(() => {
+            const el = document.getElementById('vids');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
     }
 
     function handleFormChange(e) {
@@ -87,9 +104,22 @@ export default function Resources() {
     async function handleAddVideo(e) {
         e.preventDefault();
         setFormError('');
+
+        // Basic validation
+        if (!form.title.trim() || !form.url.trim()) {
+            setFormError('Title and URL are required.');
+            return;
+        }
+
+        const embedPossible = getEmbedUrl(form.url);
+        if (embedPossible === form.url && !form.url.includes('youtube.com')) {
+           setFormError('Please enter a valid YouTube URL (e.g., https://www.youtube.com/watch?v=...)');
+           return;
+        }
+
         setSubmitting(true);
         try {
-            const res = await api.post('/api/videos', {
+            const res = await api.post('/videos', {
                 title: form.title,
                 url: form.url,
                 description: form.description,
@@ -104,7 +134,7 @@ export default function Resources() {
             console.error('Add video error:', err);
             const msg = err.response && err.response.data && err.response.data.message
                 ? err.response.data.message
-                : 'Failed to add video. Check the URL and try again.';
+                : 'Failed to add video. The server encountered an issue.';
             setFormError(msg);
         } finally {
             setSubmitting(false);
@@ -118,461 +148,475 @@ export default function Resources() {
     }
 
     return (
-        <>
+        <div className="res-page-wrapper">
             <style>{`
+  .res-page-wrapper {
+                    background: #f0f2f5;
+                    min-height: 100vh;
+                    color: #333;
+                    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+                }
+                
+                .res-hero {
+                    background: #fff;
+                    padding: 80px 0 60px;
+                    border-bottom: 1px solid #e0e0e0;
+                    position: relative;
+                    overflow: hidden;
+                }
+                .res-hero::after {
+                    content: '';
+                    position: absolute;
+                    bottom: -50px; right: -50px;
+                    width: 300px; height: 300px;
+                    background: radial-gradient(circle, rgba(72,187,120,0.06) 0%, transparent 70%);
+                    pointer-events: none;
+                }
+                
+                .res-label {
+                    color: #222;
+                    font-weight: 700;
+                    font-size: 1.1rem;
+                    margin-bottom: 20px;
+                    letter-spacing: -0.01em;
+                }
+
+                .res-semester-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                    gap: 12px;
+                    margin-bottom: 40px;
+                }
+
                 .res-semester-btn {
-                    background: transparent;
-                    border: 1px solid #343a40;
-                    color: #adb5bd;
-                    border-radius: 8px;
-                    padding: 9px 0;
+                    background: #fff;
+                    border: 1px solid #e0e0e0;
+                    color: #555;
+                    border-radius: 12px;
+                    padding: 14px 10px;
                     font-weight: 600;
-                    font-size: 0.9rem;
-                    transition: all 0.2s;
-                    width: 100%;
+                    font-size: 0.95rem;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                     cursor: pointer;
+                    text-align: center;
                 }
                 .res-semester-btn:hover {
-                    border-color: #198754;
-                    color: #198754;
-                    background: rgba(25, 135, 84, 0.07);
+                    border-color: #48bb78;
+                    color: #2e854b;
+                    transform: translateY(-2px);
+                    background: #e6f4ea;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
                 }
                 .res-semester-btn.res-active {
-                    background: #198754;
-                    border-color: #198754;
+                    background: #48bb78;
+                    border-color: #48bb78;
                     color: #fff;
-                    box-shadow: 0 2px 12px rgba(25,135,84,0.3);
+                    box-shadow: 0 8px 24px rgba(72,187,120,0.3);
+                }
+
+                .res-courses-section {
+                    animation: resFadeIn 0.5s ease;
+                }
+                @keyframes resFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+                .res-search-input {
+                    background: #fff;
+                    border: 1px solid #ccc;
+                    color: #333;
+                    padding: 10px 16px;
+                    border-radius: 10px;
+                    width: 100%;
+                    max-width: 300px;
+                    font-size: 0.9rem;
+                    transition: all 0.2s;
+                }
+                .res-search-input:focus {
+                    outline: none;
+                    border-color: #48bb78;
+                    box-shadow: 0 0 0 2px rgba(72,187,120,0.2);
+                }
+
+                .res-course-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+                    gap: 16px;
+                    margin-top: 20px;
                 }
 
                 .res-course-card {
-                    background: #212529;
-                    border: 1px solid #343a40;
-                    border-radius: 10px;
-                    padding: 20px 14px;
-                    text-align: center;
+                    background: #fff;
+                    border: 1px solid #e0e0e0;
+                    border-radius: 14px;
+                    padding: 24px 20px;
+                    text-align: left;
                     cursor: pointer;
-                    transition: all 0.2s;
-                    color: #ced4da;
-                    font-weight: 500;
-                    font-size: 0.95rem;
-                    min-height: 72px;
+                    transition: all 0.3s ease;
+                    color: #444;
+                    font-weight: 600;
+                    position: relative;
+                    overflow: hidden;
                     display: flex;
                     align-items: center;
-                    justify-content: center;
-                    user-select: none;
+                    min-height: 80px;
+                }
+                .res-course-card::before {
+                    content: '📚';
+                    margin-right: 12px;
+                    font-size: 1.2rem;
+                    opacity: 0.7;
                 }
                 .res-course-card:hover {
-                    border-color: #198754;
-                    color: #fff;
-                    background: rgba(25, 135, 84, 0.1);
-                    transform: translateY(-2px);
-                    box-shadow: 0 4px 14px rgba(25,135,84,0.15);
+                    border-color: #48bb78;
+                    color: #222;
+                    background: #f8f9fa;
+                    transform: scale(1.02);
                 }
                 .res-course-card.res-active {
-                    border-color: #198754;
-                    background: rgba(25, 135, 84, 0.18);
-                    color: #fff;
-                    box-shadow: 0 0 0 1px #198754 inset;
+                    border-color: #48bb78;
+                    background: #e6f4ea;
+                    color: #2e854b;
+                    box-shadow: inset 0 0 0 1px #48bb78;
+                }
+
+                .res-video-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+                    gap: 24px;
+                    margin-top: 30px;
                 }
 
                 .res-video-card {
-                    background: #212529;
-                    border: 1px solid #343a40;
-                    border-radius: 12px;
+                    background: #fff;
+                    border: 1px solid #e0e0e0;
+                    border-radius: 16px;
                     overflow: hidden;
-                    transition: all 0.2s;
+                    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                     cursor: pointer;
-                    height: 100%;
+                    display: flex;
+                    flex-direction: column;
                 }
                 .res-video-card:hover {
-                    border-color: #198754;
-                    box-shadow: 0 4px 18px rgba(25,135,84,0.18);
-                    transform: translateY(-2px);
+                    border-color: #48bb78;
+                    transform: translateY(-8px);
+                    box-shadow: 0 12px 30px rgba(0,0,0,0.1);
                 }
                 .res-video-card.res-playing {
-                    border-color: #198754;
-                    box-shadow: 0 0 0 2px #198754;
+                    border-color: #48bb78;
                     cursor: default;
+                    transform: none;
                 }
 
                 .res-thumb-wrap {
+                    aspect-ratio: 16/9;
+                    background: #eee;
                     position: relative;
-                    width: 100%;
-                    padding-top: 56.25%;
-                    background: #111;
-                    overflow: hidden;
                 }
                 .res-thumb-wrap iframe {
-                    position: absolute;
-                    inset: 0;
-                    width: 100%;
-                    height: 100%;
-                    border: none;
+                    width: 100%; height: 100%; border:0;
                 }
-                .res-play-icon {
-                    position: absolute;
-                    inset: 0;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    background: rgba(0,0,0,0.38);
-                    transition: opacity 0.2s;
-                    pointer-events: none;
+                .res-play-overlay {
+                    position: absolute; inset: 0;
+                    background: rgba(0,0,0,0.2);
+                    display: flex; align-items: center; justify-content: center;
+                    transition: background 0.3s;
                 }
-                .res-video-card:hover .res-play-icon { opacity: 0; }
+                .res-video-card:hover .res-play-overlay {
+                    background: rgba(0,0,0,0.05);
+                }
+                .res-play-btn {
+                    width: 60px; height: 60px;
+                    background: #48bb78;
+                    border-radius: 50%;
+                    display: flex; align-items: center; justify-content: center;
+                    box-shadow: 0 0 20px rgba(72,187,120,0.5);
+                    transform: scale(1);
+                    transition: transform 0.2s;
+                }
+                .res-video-card:hover .res-play-btn {
+                    transform: scale(1.1);
+                }
 
-                .res-video-body {
-                    padding: 14px 16px 16px;
+                .res-video-info { padding: 20px; }
+                .res-video-tag {
+                    color: #48bb78; font-size: 0.75rem; font-weight: 750;
+                    text-transform: uppercase; margin-bottom: 8px; display: block;
                 }
                 .res-video-title {
-                    color: #f8f9fa;
-                    font-weight: 600;
-                    font-size: 0.97rem;
-                    margin-bottom: 4px;
-                    line-height: 1.4;
-                }
-                .res-video-meta {
-                    color: #6c757d;
-                    font-size: 0.8rem;
+                    font-size: 1.05rem; font-weight: 700; color: #222;
+                    line-height: 1.4; margin-bottom: 10px;
+                    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
                 }
                 .res-video-desc {
-                    color: #adb5bd;
-                    font-size: 0.85rem;
-                    margin-top: 7px;
-                    line-height: 1.5;
-                    display: -webkit-box;
-                    -webkit-line-clamp: 3;
-                    -webkit-box-orient: vertical;
-                    overflow: hidden;
+                    font-size: 0.88rem; color: #666; line-height: 1.6;
+                    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
                 }
 
-                .res-label {
-                    color: #f8f9fa;
-                    font-weight: 700;
-                    font-size: 1.05rem;
-                    margin-bottom: 14px;
+                .res-toolbar {
+                    background: #fff;
+                    border: 1px solid #e0e0e0;
+                    border-radius: 12px;
+                    padding: 12px 20px;
+                    display: flex; justify-content: space-between; align-items: center;
+                    margin-bottom: 30px;
                 }
-                .res-divider {
-                    border: none;
-                    border-top: 1px solid #343a40;
-                    margin: 30px 0;
+                
+                .res-btn-back {
+                    background: transparent; border: 0; color: #555;
+                    font-size: 0.85rem; font-weight: 600; cursor: pointer;
+                    display: flex; align-items: center; transition: color 0.2s;
                 }
-                .res-breadcrumb {
-                    color: #6c757d;
-                    font-size: 0.85rem;
-                }
-                .res-breadcrumb .active { color: #198754; font-weight: 600; }
+                .res-btn-back:hover { color: #111; }
+                .res-btn-back svg { margin-right: 6px; }
 
-                /* Spinner */
-                .res-spin {
-                    width: 40px; height: 40px;
-                    border: 3px solid #343a40;
-                    border-top-color: #198754;
-                    border-radius: 50%;
-                    animation: resSpin 0.75s linear infinite;
-                    margin: 48px auto;
-                }
-                @keyframes resSpin { to { transform: rotate(360deg); } }
+                /* Premium Scrollbar */
+                ::-webkit-scrollbar { width: 8px; }
+                ::-webkit-scrollbar-track { background: #f0f2f5; }
+                ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+                ::-webkit-scrollbar-thumb:hover { background: #aaa; }
 
-                /* Modal */
                 .res-backdrop {
-                    position: fixed; inset: 0;
-                    background: rgba(0,0,0,0.72);
-                    z-index: 1055;
-                    display: flex; align-items: center; justify-content: center;
-                    padding: 16px;
+                    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+                    backdrop-filter: blur(4px); z-index: 2000;
+                    display: flex; align-items: center; justify-content: center; padding: 20px;
                 }
                 .res-modal {
-                    background: #212529;
-                    border: 1px solid #343a40;
-                    border-radius: 14px;
-                    width: 100%; max-width: 520px;
-                    padding: 28px;
-                    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-                    animation: resModalIn 0.18s ease;
+                    background: #fff; border: 1px solid #ccc; border-radius: 20px;
+                    width: 100%; max-width: 500px; padding: 32px;
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+                    animation: resPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
                 }
-                @keyframes resModalIn {
-                    from { opacity:0; transform: scale(0.95) translateY(-8px); }
-                    to   { opacity:1; transform: scale(1) translateY(0); }
-                }
-                .res-modal .form-control, .res-modal textarea {
-                    background: #111316;
-                    border-color: #343a40;
-                    color: #f8f9fa;
-                    border-radius: 8px;
-                }
-                .res-modal .form-control:focus, .res-modal textarea:focus {
-                    background: #111316;
-                    border-color: #198754;
-                    color: #f8f9fa;
-                    box-shadow: 0 0 0 2px rgba(25,135,84,0.22);
-                }
-                .res-modal label { color: #adb5bd; font-size: 0.87rem; font-weight: 500; }
-                .res-modal textarea { resize: vertical; min-height: 84px; }
-                ::placeholder { color: #6c757d !important; }
+                @keyframes resPop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
             `}</style>
 
-            {/* Hero Header */}
-            <section className="bg-dark text-white text-center py-5" style={{ borderBottom: '1px solid #343a40' }}>
-                <div className="container">
-                    <h1 className="display-6 fw-bold text-success mb-2">📂 Academic Resources</h1>
-                    <p className="lead mb-0" style={{ color: '#adb5bd' }}>
-                        Browse lecture videos shared by AUST CSE students — organized by semester &amp; course.
+            <header className="res-hero">
+                <div className="container text-center">
+                    <span className="badge bg-success-subtle text-success mb-3 px-3 py-2 rounded-pill fw-bold">E-LEARNING PORTAL</span>
+                    <h1 className="display-4 fw-bolder mb-3">Academic <span className="text-success">Resources</span></h1>
+                    <p className="lead text-secondary opacity-75 mx-auto" style={{ maxWidth: '600px' }}>
+                        Curated lecture videos and materials shared by senior students to help you ace your CSE journey at AUST.
                     </p>
                 </div>
-            </section>
+            </header>
 
-            <div className="bg-dark" style={{ minHeight: 'calc(100vh - 200px)' }}>
-                <div className="container py-5">
-
-                    {/* ── Semester Buttons ── */}
-                    <p className="res-label">Select a Semester</p>
-                    <div className="row g-2 mb-2">
+            <main className="container py-5">
+                {/* Semester Selection */}
+                <section>
+                    <div className="d-flex justify-content-between align-items-end mb-4">
+                        <h2 className="res-label m-0">1. Select Semester</h2>
+                        {semester && <button onClick={() => setSemester(null)} className="btn btn-link text-secondary p-0 text-decoration-none small">Clear All</button>}
+                    </div>
+                    <div className="res-semester-grid">
                         {semesters.map(s => (
-                            <div className="col-6 col-sm-3" key={s}>
-                                <button
-                                    className={'res-semester-btn' + (semester === s ? ' res-active' : '')}
-                                    onClick={() => handleSemesterClick(s)}
-                                >
-                                    Semester {s}
-                                </button>
+                            <div 
+                                key={s} 
+                                className={`res-semester-btn ${semester === s ? 'res-active' : ''}`}
+                                onClick={() => handleSemesterClick(s)}
+                            >
+                                {s} Semester
                             </div>
                         ))}
                     </div>
+                </section>
 
-                    <hr className="res-divider" />
+                <hr className="my-5 border-secondary opacity-25" />
 
-                    {/* ── No semester selected ── */}
-                    {!semester && (
-                        <div className="text-center py-5">
-                            <div style={{ fontSize: '2.8rem' }}>🎓</div>
-                            <p className="mt-3" style={{ color: '#6c757d' }}>Select a semester above to browse courses.</p>
+                {/* Courses Selection */}
+                {semester ? (
+                    <section className="res-courses-section">
+                        <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+                            <h2 className="res-label m-0">2. Browse Courses for {semester}</h2>
+                            <input 
+                                type="text" 
+                                className="res-search-input" 
+                                placeholder="Search courses..." 
+                                value={courseSearch}
+                                onChange={(e) => setCourseSearch(e.target.value)}
+                            />
                         </div>
-                    )}
-
-                    {/* ── Courses Grid ── */}
-                    {semester && (
-                        <>
-                            <p className="res-label">
-                                Semester {semester} — Courses
-                                {course && <span className="text-success fw-normal" style={{ fontSize: '0.95rem' }}> › {course}</span>}
-                            </p>
-                            <div className="row g-3 mb-2">
-                                {(courseMap[semester] || []).map(c => (
-                                    <div className="col-12 col-sm-6 col-md-4" key={c}>
-                                        <div
-                                            className={'res-course-card' + (course === c ? ' res-active' : '')}
-                                            onClick={() => handleCourseClick(c)}
-                                            role="button"
-                                            tabIndex={0}
-                                            onKeyDown={e => e.key === 'Enter' && handleCourseClick(c)}
-                                        >
-                                            {c}
-                                        </div>
+                        
+                        {filteredCourses.length > 0 ? (
+                            <div className="res-course-grid">
+                                {filteredCourses.map(c => (
+                                    <div 
+                                        key={c} 
+                                        className={`res-course-card ${course === c ? 'res-active' : ''}`}
+                                        onClick={() => handleCourseClick(c)}
+                                    >
+                                        {c}
                                     </div>
                                 ))}
                             </div>
-
-                            <hr className="res-divider" />
-
-                            {/* ── No course selected ── */}
-                            {!course && (
-                                <div className="text-center py-5">
-                                    <div style={{ fontSize: '2.4rem' }}>👆</div>
-                                    <p className="mt-3" style={{ color: '#6c757d' }}>Select a course above to view its videos.</p>
-                                </div>
-                            )}
-
-                            {/* ── Video Area ── */}
-                            {course && (
-                                <>
-                                    {/* Toolbar */}
-                                    <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
-                                        <div className="res-breadcrumb">
-                                            Resources › Sem {semester} › <span className="active">{course}</span>
-                                        </div>
-                                        <button className="btn btn-success btn-sm px-4" onClick={openModal}>
-                                            + Add Video
-                                        </button>
-                                    </div>
-
-                                    {/* Loading */}
-                                    {loading && <div className="res-spin" />}
-
-                                    {/* Error state */}
-                                    {!loading && fetchError && (
-                                        <div className="text-center py-5">
-                                            <div style={{ fontSize: '2rem' }}>⚠️</div>
-                                            <p className="mt-3" style={{ color: '#dc3545' }}>{fetchError}</p>
-                                            <button
-                                                className="btn btn-outline-secondary btn-sm"
-                                                onClick={() => loadVideos(semester, course)}
-                                            >Retry</button>
-                                        </div>
-                                    )}
-
-                                    {/* Empty state */}
-                                    {!loading && !fetchError && videos.length === 0 && (
-                                        <div className="text-center py-5">
-                                            <div style={{ fontSize: '2.8rem' }}>📭</div>
-                                            <p className="mt-3" style={{ color: '#6c757d' }}>
-                                                No videos yet for <strong className="text-light">{course}</strong>.
-                                            </p>
-                                            <button className="btn btn-success btn-sm px-4 mt-1" onClick={openModal}>
-                                                + Be the First to Add One
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    {/* Videos */}
-                                    {!loading && !fetchError && videos.length > 0 && (
-                                        <div className="row g-4">
-                                            {videos.map(video => {
-                                                const isPlaying = activeVideo === video.id;
-                                                const embedSrc = getEmbedUrl(video.url || '');
-                                                return (
-                                                    <div className="col-12 col-md-6 col-lg-4" key={video.id}>
-                                                        <div
-                                                            className={'res-video-card' + (isPlaying ? ' res-playing' : '')}
-                                                            onClick={() => !isPlaying && setActiveVideo(video.id)}
-                                                        >
-                                                            <div className="res-thumb-wrap">
-                                                                <iframe
-                                                                    src={isPlaying ? embedSrc + '?autoplay=1&rel=0' : embedSrc + '?rel=0'}
-                                                                    title={video.title || 'Video'}
-                                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                                    allowFullScreen
-                                                                    loading="lazy"
-                                                                    style={isPlaying ? {} : { pointerEvents: 'none' }}
-                                                                />
-                                                                {!isPlaying && (
-                                                                    <div className="res-play-icon">
-                                                                        <svg width="54" height="54" viewBox="0 0 54 54">
-                                                                            <circle cx="27" cy="27" r="27" fill="rgba(25,135,84,0.85)" />
-                                                                            <polygon points="22,17 41,27 22,37" fill="white" />
-                                                                        </svg>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                            <div className="res-video-body">
-                                                                <div className="res-video-title">{video.title || 'Untitled Video'}</div>
-                                                                <div className="res-video-meta">
-                                                                    📚 {video.course} &nbsp;·&nbsp; Semester {video.semester}
-                                                                </div>
-                                                                {video.description ? (
-                                                                    <div className="res-video-desc">{video.description}</div>
-                                                                ) : null}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                </>
-                            )}
-                        </>
-                    )}
-                </div>
-            </div>
-
-            {/* ── Add Video Modal ── */}
-            {showModal && (
-                <div
-                    className="res-backdrop"
-                    onClick={e => e.target === e.currentTarget && setShowModal(false)}
-                >
-                    <div className="res-modal">
-                        <div className="d-flex justify-content-between align-items-start mb-3">
-                            <div>
-                                <h5 className="text-white fw-bold mb-1">📹 Add New Video</h5>
-                                <small style={{ color: '#6c757d' }}>
-                                    Sem <span className="text-success fw-semibold">{semester}</span>
-                                    &nbsp;›&nbsp;
-                                    <span className="text-success fw-semibold">{course}</span>
-                                </small>
+                        ) : (
+                            <div className="text-center py-5 text-secondary opacity-50">
+                                🔍 No courses found matching "{courseSearch}"
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => setShowModal(false)}
-                                style={{ background: 'none', border: 'none', color: '#6c757d', fontSize: '1.5rem', lineHeight: 1, cursor: 'pointer', padding: 0, marginTop: '-2px' }}
-                            >&times;</button>
+                        )}
+                    </section>
+                ) : (
+                    <div className="text-center py-5 text-secondary opacity-50">
+                        <div style={{ fontSize: '3rem' }} className="mb-3">👆</div>
+                        <p>Unlock course materials by selecting a semester above.</p>
+                    </div>
+                )}
+
+                <hr className="my-5 border-secondary opacity-25" />
+
+                {/* Video Results Area */}
+                {course && (
+                    <section className="res-courses-section" id="vids">
+                        <div className="res-toolbar">
+                            <div className="d-flex flex-column">
+                                <button className="res-btn-back mb-1" onClick={() => setCourse(null)}>
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                                    All Courses
+                                </button>
+                                <span className="small text-secondary fw-semibold">
+                                    {semester} › <span className="text-success">{course}</span>
+                                </span>
+                            </div>
+                            <button className="btn btn-success rounded-3 px-4 fw-bold shadow-sm" onClick={openModal}>
+                                + Share Video
+                            </button>
                         </div>
 
-                        <hr style={{ borderColor: '#343a40', margin: '12px 0 20px' }} />
+                        {loading ? (
+                            <div className="text-center py-5">
+                                <div className="spinner-border text-success" role="status" style={{ width: '3rem', height: '3rem' }}>
+                                    <span className="visually-hidden">Loading...</span>
+                                </div>
+                                <p className="mt-4 text-secondary">Fetching the best resources for you...</p>
+                            </div>
+                        ) : fetchError ? (
+                            <div className="alert alert-danger bg-danger-subtle border-0 rounded-4 p-4 text-center">
+                                <h4 className="alert-heading fw-bold">Oops! Something went wrong</h4>
+                                <p className="mb-3">{fetchError}</p>
+                                <button className="btn btn-danger px-4" onClick={() => loadVideos(semester, course)}>Try Again</button>
+                            </div>
+                        ) : videos.length === 0 ? (
+                            <div className="text-center py-5 border border-secondary border-dashed rounded-4" style={{ borderStyle: 'dashed' }}>
+                                <div style={{ fontSize: '3.5rem' }}>🎬</div>
+                                <h3 className="mt-4 fw-bold">No videos yet</h3>
+                                <p className="text-secondary pb-4">Be the first to share a lecture or resource for this course!</p>
+                                <button className="btn btn-success btn-lg px-5 rounded-pill" onClick={openModal}>+ Add Content</button>
+                            </div>
+                        ) : (
+                            <div className="res-video-grid">
+                                {videos.map(v => {
+                                    const isPlaying = activeVideo === v.id;
+                                    const embedUrl = getEmbedUrl(v.url);
+                                    return (
+                                        <div 
+                                            key={v.id} 
+                                            className={`res-video-card ${isPlaying ? 'res-playing' : ''}`}
+                                            onClick={() => !isPlaying && setActiveVideo(v.id)}
+                                        >
+                                            <div className="res-thumb-wrap">
+                                                {isPlaying ? (
+                                                    <iframe 
+                                                        src={`${embedUrl}?autoplay=1&modestbranding=1`} 
+                                                        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" 
+                                                        allowFullScreen 
+                                                    />
+                                                ) : (
+                                                    <>
+                                                        <img 
+                                                            src={`https://img.youtube.com/vi/${embedUrl.split('/').pop()}/mqdefault.jpg`} 
+                                                            alt={v.title}
+                                                            className="w-100 h-100 object-fit-cover"
+                                                            onError={(e) => { e.target.src = 'https://via.placeholder.com/480x270/1A1D21/FFFFFF?text=Resource'; }}
+                                                        />
+                                                        <div className="res-play-overlay">
+                                                            <div className="res-play-btn">
+                                                                <svg width="24" height="24" fill="white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                                            </div>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+                                            <div className="res-video-info">
+                                                <span className="res-video-tag">{course}</span>
+                                                <h3 className="res-video-title">{v.title}</h3>
+                                                {v.description && <p className="res-video-desc">{v.description}</p>}
+                                                <div className="mt-3 pt-3 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                                                    <span className="small text-secondary fw-medium">Student Share</span>
+                                                    <a href={v.url} target="_blank" rel="noreferrer" className="text-success text-decoration-none small fw-bold">Watch on YouTube</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </section>
+                )}
+            </main>
+
+            {/* Modal */}
+            {showModal && (
+                <div className="res-backdrop" onClick={(e) => e.target === e.currentTarget && setShowModal(false)}>
+                    <div className="res-modal">
+                        <div className="d-flex justify-content-between align-items-center mb-4">
+                            <h3 className="h5 fw-bold m-0 text-success">📹 Share Resource</h3>
+                            <button className="btn-close btn-close-white" onClick={() => setShowModal(false)} />
+                        </div>
+                        
+                        <p className="small text-secondary mb-4 p-3 rounded-3 bg-light border">
+                            You are adding a resource for <br/>
+                            <strong className="text-dark">{course}</strong> (Sem {semester})
+                        </p>
 
                         {formError && (
-                            <div className="mb-3 py-2 px-3" style={{
-                                background: 'rgba(220,53,69,0.12)',
-                                border: '1px solid rgba(220,53,69,0.3)',
-                                color: '#ea868f',
-                                borderRadius: '8px',
-                                fontSize: '0.87rem'
-                            }}>
+                            <div className="alert alert-danger px-3 py-2 small mb-3 border-0 rounded-3 d-flex align-items-center">
+                                <svg className="me-2" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
                                 {formError}
                             </div>
                         )}
 
-                        <form onSubmit={handleAddVideo} noValidate>
+                        <form onSubmit={handleAddVideo}>
                             <div className="mb-3">
-                                <label className="d-block mb-1">Video Title <span style={{ color: '#dc3545' }}>*</span></label>
-                                <input
-                                    type="text"
-                                    name="title"
-                                    className="form-control"
-                                    placeholder="e.g. Lecture 1: Introduction to Algorithms"
+                                <label className="form-label small text-secondary fw-bold">RESOURCE TITLE</label>
+                                <input 
+                                    name="title" 
+                                    className="form-control bg-white border-secondary bg-opacity-10 text-dark p-2 px-3" 
+                                    placeholder="e.g. Master Branch & Bound in 10 mins" 
                                     value={form.title}
                                     onChange={handleFormChange}
                                     required
                                 />
                             </div>
-
                             <div className="mb-3">
-                                <label className="d-block mb-1">YouTube URL <span style={{ color: '#dc3545' }}>*</span></label>
-                                <input
-                                    type="url"
-                                    name="url"
-                                    className="form-control"
-                                    placeholder="https://www.youtube.com/watch?v=..."
+                                <label className="form-label small text-secondary fw-bold">YOUTUBE LINK</label>
+                                <input 
+                                    name="url" 
+                                    className="form-control bg-white border-secondary bg-opacity-10 text-dark p-2 px-3"
+                                    placeholder="https://www.youtube.com/watch?v=..." 
                                     value={form.url}
                                     onChange={handleFormChange}
                                     required
                                 />
                             </div>
-
                             <div className="mb-4">
-                                <label className="d-block mb-1">Description <span style={{ color: '#495057' }}>(optional)</span></label>
-                                <textarea
-                                    name="description"
-                                    className="form-control"
-                                    placeholder="Brief summary of the video content..."
+                                <label className="form-label small text-secondary fw-bold">DESCRIPTION (OPTIONAL)</label>
+                                <textarea 
+                                    name="description" 
+                                    className="form-control bg-white border-secondary bg-opacity-10 text-dark p-2 px-3" 
+                                    rows="3"
+                                    placeholder="What does this video cover?" 
                                     value={form.description}
                                     onChange={handleFormChange}
                                 />
                             </div>
-
-                            <div className="d-flex gap-2">
-                                <button
-                                    type="submit"
-                                    className="btn btn-success flex-grow-1"
-                                    disabled={submitting}
-                                >
-                                    {submitting
-                                        ? <><span className="spinner-border spinner-border-sm me-2" role="status"></span>Saving...</>
-                                        : 'Save Video'}
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn btn-outline-secondary"
-                                    onClick={() => setShowModal(false)}
-                                >
-                                    Cancel
-                                </button>
-                            </div>
+                            <button 
+                                className="btn btn-success btn-lg w-100 fw-bold rounded-3 py-3" 
+                                type="submit" 
+                                disabled={submitting}
+                            >
+                                {submitting ? 'Sharing...' : 'Add to Collection'}
+                            </button>
                         </form>
                     </div>
                 </div>
             )}
-        </>
+        </div>
     );
 }
