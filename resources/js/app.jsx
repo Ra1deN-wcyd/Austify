@@ -10,7 +10,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
-import Collaborations from './pages/Collaborations';
+import Collaborations from './pages/Collaboration'; // fixed the file path
+import FindTeammates from './pages/FindTeammates';
 import Chat from './pages/Chat';
 import Problem from './pages/Problem';
 
@@ -25,7 +26,10 @@ function App() {
                     <Route path="/register" element={<Register />} />
                     <Route path="/home" element={<PrivateRoute><Home /></PrivateRoute>} />
                     <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
-                    <Route path="/collaborations" element={<PrivateRoute><Collaborations /></PrivateRoute>} />
+                    <Route path="/resources" element={<PrivateRoute><Resources /></PrivateRoute>} />
+                    <Route path="/collaborations" element={<PrivateRoute><FindTeammates /></PrivateRoute>} />
+                    <Route path="/collaborations/manage" element={<PrivateRoute><Collaborations /></PrivateRoute>} />
+                    <Route path="/collaborations/:id" element={<PrivateRoute><Collaborations /></PrivateRoute>} />
                     <Route path="/chat" element={<PrivateRoute><Chat /></PrivateRoute>} />
                     <Route path="/problem" element={<PrivateRoute><Problem /></PrivateRoute>} />
                 </Routes>
