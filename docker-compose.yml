@@ -1,0 +1,27 @@
+services:
+  app:
+    build: .
+    container_name: austify-app
+    restart: unless-stopped
+    volumes:
+      - .:/var/www/html
+    ports:
+      - "8000:80"
+    networks:
+      - austify-network
+
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: austify-mssql
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "YourStrongPassword123!" # Change this!
+    ports:
+      - "1433:1433" # Port for SSMS
+    networks:
+      - austify-network
+
+networks:
+  austify-network:
+    driver: bridge

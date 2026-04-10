@@ -112,4 +112,18 @@ return [
 
     'password_timeout' => 10800,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Custom Authentication Rules
+    |--------------------------------------------------------------------------
+    |
+    | Student accounts must use the configured AUST domain. The admin bypass
+    | email keeps the seeded administrator accessible even though it is not an
+    | institutional address.
+    |
+    */
+
+    'allowed_email_domain' => env('GOOGLE_ALLOWED_DOMAIN', 'aust.edu'),
+    'admin_bypass_email' => env('ADMIN_EMAIL', 'tamjid@gmail.com'),
+
 ];

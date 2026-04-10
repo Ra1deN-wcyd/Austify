@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 function Navbar() {
@@ -44,6 +44,8 @@ function Navbar() {
                 }
                 .pw-nav .nav-link.active-link {
                     color: #48bb78 !important;
+                    background: rgba(72,187,120,0.08);
+                    font-weight: 600;
                 }
                 .pw-nav .navbar-toggler {
                     border-color: rgba(72,187,120,0.3);
@@ -97,6 +99,9 @@ function Navbar() {
                     transform: scale(1.03);
                     color: #0f1117 !important;
                 }
+                .pw-register-btn.active-register {
+                    box-shadow: 0 0 0 3px rgba(72,187,120,0.4);
+                }
             `}</style>
 
             <nav className="navbar navbar-expand-lg pw-nav">
@@ -118,18 +123,18 @@ function Navbar() {
 
                             {user && (
                                 <li className="nav-item">
-                                    <Link className="nav-link" to="/home">Home</Link>
+                                    <NavLink className={({isActive}) => `nav-link ${isActive ? 'active-link' : ''}`} to="/home">Home</NavLink>
                                 </li>
                             )}
 
                             <li className="nav-item">
-                                <Link className="nav-link" to="/collaborations">Collaborate</Link>
+                                <NavLink className={({isActive}) => `nav-link ${isActive ? 'active-link' : ''}`} to="/collaborations">Collaborate</NavLink>
                             </li>
                             <li className="nav-item">
-                                <Link className="nav-link" to="/chat">Chat</Link>
+                                <NavLink className={({isActive}) => `nav-link ${isActive ? 'active-link' : ''}`} to="/chat">Chat</NavLink>
                             </li>
                             <li className="nav-item">
-                                <Link className="nav-link" to="/problem">Problem</Link>
+                                <NavLink className={({isActive}) => `nav-link ${isActive ? 'active-link' : ''}`} to="/problem">Problem</NavLink>
                             </li>
                             <li className="nav-item">
                                 <a className="nav-link" href="#">Resources</a>
@@ -147,8 +152,8 @@ function Navbar() {
                                     </>
                                 ) : (
                                     <>
-                                        <Link className="nav-link" to="/login">Login</Link>
-                                        <Link className="pw-register-btn" to="/register">Register</Link>
+                                        <NavLink className={({isActive}) => `nav-link ${isActive ? 'active-link' : ''}`} to="/login">Login</NavLink>
+                                        <NavLink className={({isActive}) => `pw-register-btn ${isActive ? 'active-register' : ''}`} to="/register">Register</NavLink>
                                     </>
                                 )}
                             </div>

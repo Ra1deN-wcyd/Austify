@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -22,6 +22,7 @@ class User extends Authenticatable
         'email',
         'password',
         'github_link',
+        'google_id',
     ];
 
     /**
@@ -37,8 +38,17 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed',
+        'is_banned' => 'boolean',
+        'timeout_until' => 'datetime',
     ];
+
+    /**
+     * Hash password only when it is not null.
+     */
+    public function setPasswordAttribute($value): void
+    {
+        $this->attributes['password'] = $value ? bcrypt($value) : null;
+    }
 
     /**
      * Relationship: One user has many posts.
@@ -55,6 +65,15 @@ class User extends Authenticatable
     public function isAdmin()
     {
         return $this->role === 'admin';
+    }
+
+    public function isTimedOut(): bool
+    {
+        if (! $this->timeout_until) {
+            return false;
+        }
+
+        return now()->lt($this->timeout_until);
     }
 
 /**

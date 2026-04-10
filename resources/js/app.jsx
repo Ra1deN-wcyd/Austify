@@ -14,6 +14,8 @@ import Collaborations from './pages/Collaboration'; // fixed the file path
 import FindTeammates from './pages/FindTeammates';
 import Chat from './pages/Chat';
 import Problem from './pages/Problem';
+import OAuthCallback from './pages/OAuthCallback';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
     return (
@@ -32,6 +34,8 @@ function App() {
                     <Route path="/collaborations/:id" element={<PrivateRoute><Collaborations /></PrivateRoute>} />
                     <Route path="/chat" element={<PrivateRoute><Chat /></PrivateRoute>} />
                     <Route path="/problem" element={<PrivateRoute><Problem /></PrivateRoute>} />
+                    <Route path="/admin/dashboard" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
+                    <Route path="/auth/callback" element={<OAuthCallback />} />
                 </Routes>
             </Router>
         </AuthProvider>
