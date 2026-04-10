@@ -9,6 +9,7 @@ use App\Http\Controllers\CollaborationRequestController;
 use App\Http\Controllers\VideoController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\AdminUserManagementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,10 +25,14 @@ Route::post('/accounts/register', [AuthController::class, 'register']);
 // URL: http://127.0.0.1:8000/api/accounts/login
 Route::post('/accounts/login', [AuthController::class, 'login']);
 
+// URL: http://127.0.0.1:8000/api/accounts/check-email
+// Returns auth_method: 'google' | 'password' | 'new' | 'invalid'
+Route::post('/accounts/check-email', [AuthController::class, 'checkEmail']);
+Route::post('/accounts/resend-verification', [AuthController::class, 'resendVerificationEmail']);
 
 
 // --- PROTECTED ACCESS (Bearer Token Required) ---
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'enforce.restrictions'])->group(function () {
     
     // Auth Management
 
@@ -57,6 +62,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // URL: http://127.0.0.1:8000/api/accounts/update-profile
     Route::post('/accounts/update-profile', [UserController::class, 'updateProfile']);
+
+    Route::prefix('admin')->middleware('ensure.admin')->group(function () {
+        Route::get('/users', [AdminUserManagementController::class, 'index']);
+        Route::post('/users/{id}/timeout', [AdminUserManagementController::class, 'timeout']);
+        Route::post('/users/{id}/untimeout', [AdminUserManagementController::class, 'untimeout']);
+        Route::post('/users/{id}/ban', [AdminUserManagementController::class, 'ban']);
+        Route::post('/users/{id}/unban', [AdminUserManagementController::class, 'unban']);
+    });
 
 
     // ================= POSTS =================

@@ -83,6 +83,7 @@ class ChatController extends Controller
 
         $conversation = Conversation::whereHas('users', fn($q) => $q->where('user_id', $currentUserId))
             ->whereHas('users', fn($q) => $q->where('user_id', $recipientId))
+            ->has('users', 2)
             ->with('users')
             ->first();
 //if no existing conversation, create a new one and attach both users

@@ -54,5 +54,7 @@ class Kernel extends HttpKernel
         
         // The Custom Guard for Austify
         'api.token' => \App\Http\Middleware\TestMiddleware::class,
+        'ensure.admin' => \App\Http\Middleware\EnsureAdmin::class,
+        'enforce.restrictions' => \App\Http\Middleware\EnforceUserRestrictions::class,
     ];
 }

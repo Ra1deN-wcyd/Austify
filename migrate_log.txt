@@ -1,0 +1,26 @@
+﻿
+   INFO  Running migrations.  
+
+  2026_04_06_000000_add_google_id_to_users_table  11ms FAIL
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[23000]: [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The CREATE UNIQUE INDEX statement terminated because a duplicate key was found for the object name 'dbo.users' and the index name 'users_google_id_unique'. The duplicate key value is (<NULL>). (Connection: sqlsrv, SQL: create unique index "users_google_id_unique" on "users" ("google_id"))
+
+  at vendor\laravel\framework\src\Illuminate\Database\Connection.php:829
+    825Γûò                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826Γûò                 );
+    827Γûò             }
+    828Γûò 
+  Γ₧£ 829Γûò             throw new QueryException(
+    830Γûò                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    831Γûò             );
+    832Γûò         }
+    833Γûò     }
+
+  1   vendor\laravel\framework\src\Illuminate\Database\Connection.php:587
+      PDOException::("SQLSTATE[23000]: [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The CREATE UNIQUE INDEX statement terminated because a duplicate key was found for the object name 'dbo.users' and the index name 'users_google_id_unique'. The duplicate key value is (<NULL>).")
+
+  2   vendor\laravel\framework\src\Illuminate\Database\Connection.php:587
+      PDOStatement::execute()
+
