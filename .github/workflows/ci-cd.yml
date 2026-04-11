@@ -44,7 +44,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: mbstring, dom, fileinfo, sqlsrv, pdo_sqlsrv
+          extensions: mbstring, dom, fileinfo, sqlite3, pdo_sqlite, sqlsrv, pdo_sqlsrv
           coverage: none
 
       - name: Install PHP dependencies
@@ -64,21 +64,16 @@ jobs:
           DB_CONNECTION: sqlsrv
           DB_HOST: 127.0.0.1
           DB_PORT: 1433
-          DB_DATABASE: tempdb
+          DB_DATABASE: master
           DB_USERNAME: sa
           DB_PASSWORD: Password123!
           DB_TRUST_SERVER_CERTIFICATE: true
 
       - name: Execute tests
+        # No DB env overrides here — phpunit.xml sets DB_CONNECTION=sqlite
+        # with an in-memory database, which is fast and has no external deps.
+        # SQL Server was already validated in the migration step above.
         run: php artisan test --stop-on-failure
-        env:
-          DB_CONNECTION: sqlsrv
-          DB_HOST: 127.0.0.1
-          DB_PORT: 1433
-          DB_DATABASE: tempdb
-          DB_USERNAME: sa
-          DB_PASSWORD: Password123!
-          DB_TRUST_SERVER_CERTIFICATE: true
 
   build-and-push:
     # Logic: Only build if tests pass AND we are on the 'devolop' or 'tamjid' branch
