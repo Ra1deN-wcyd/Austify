@@ -7,3 +7,6 @@ storage/*.key
 docker-compose.yml
 Dockerfile
 .env
+# Exclude the storage symlink - it's a symlink to ../storage/app/public
+# which Docker cannot resolve. The entrypoint runs `php artisan storage:link` instead.
+public/storage
