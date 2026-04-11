@@ -2,9 +2,9 @@ name: Austify CI/CD
 
 on:
   push:
-    branches: [ "develop", "tamjid" ]
+    branches: [ "devolop", "tamjid" ]
   pull_request:
-    branches: [ "develop" ]
+    branches: [ "devolop" ]
 
 jobs:
   test-logic:
