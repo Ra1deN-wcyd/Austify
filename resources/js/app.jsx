@@ -12,6 +12,7 @@ import Home from './pages/Home';
 import Profile from './pages/Profile';
 import Collaborations from './pages/Collaboration'; // fixed the file path
 import FindTeammates from './pages/FindTeammates';
+import Resources from './pages/Resources';
 import Chat from './pages/Chat';
 import Problem from './pages/Problem';
 import OAuthCallback from './pages/OAuthCallback';
