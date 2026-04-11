@@ -7,6 +7,7 @@ on:
     branches: [ "develop" ]
 
 env:
+  # This kills that annoying Node.js warning
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
@@ -25,7 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Microsoft SQL Server Drivers
+      - name: Install MS SQL Drivers
         run: |
           curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
           curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
@@ -37,27 +38,28 @@ jobs:
         with:
           php-version: '8.3'
           extensions: mbstring, dom, fileinfo, sqlsrv, pdo_sqlsrv
-          
-      - name: Install Dependencies
-        run: composer install --prefer-dist --no-progress
 
-      - name: Prepare Environment
+      - name: Install Dependencies
+        run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+      - name: Setup Laravel
         run: |
           cp .env.example .env
-          php artisan key:generate
+          php artisan key:generate --force
           chmod -R 777 storage bootstrap/cache
 
       - name: Run Migrations
-        # Added --database=sqlsrv to be explicit
-        run: php artisan migrate --force --database=sqlsrv
+        # We add a 20-second sleep to make sure the DB is actually awake
+        run: |
+          sleep 20
+          php artisan migrate --force
         env:
           DB_CONNECTION: sqlsrv
           DB_HOST: 127.0.0.1
           DB_PORT: 1433
-          DB_DATABASE: master # 'master' always exists on MSSQL
+          DB_DATABASE: tempdb
           DB_USERNAME: sa
           DB_PASSWORD: Password123!
-          # This helps with SSL issues in CI
           DB_TRUST_SERVER_CERTIFICATE: true
 
       - name: Execute Tests
@@ -66,7 +68,7 @@ jobs:
           DB_CONNECTION: sqlsrv
           DB_HOST: 127.0.0.1
           DB_PORT: 1433
-          DB_DATABASE: master
+          DB_DATABASE: tempdb
           DB_USERNAME: sa
           DB_PASSWORD: Password123!
           DB_TRUST_SERVER_CERTIFICATE: true
