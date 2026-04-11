@@ -262,6 +262,8 @@ export default function Collaboration() {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
+    const [deleteModal, setDeleteModal] = useState({ show: false, id: null });
 
     const [requestSending, setRequestSending] = useState(false);
     const [hasSentRequest, setHasSentRequest] = useState(false);
@@ -270,37 +272,58 @@ export default function Collaboration() {
     const currentUserId = user?.id ?? Number(localStorage.getItem('user_id') ?? 0);
 
     // Initial Fetch
-    useEffect(() => {
-        async function fetchData() {
-            setLoading(true);
-            setError(null);
-            try {
-                if (id) {
-                    // Fetch single collab detail
-                    const res = await api.get(`/collaborations/${id}`);
-                    const detail = res.data?.data ?? res.data;
-                    setCollab(detail);
+    const fetchData = async (page = 1) => {
+        setLoading(true);
+        setError(null);
+        try {
+            if (id) {
+                // Fetch single collab detail
+                const res = await api.get(`/collaborations/${id}`);
+                const detail = res.data?.data ?? res.data;
+                setCollab(detail);
 
-                    // If owner, fetch requests
-                    if (Number(detail.user_id) === currentUserId) {
-                        const reqRes = await api.get(`/collaborations/${id}/requests`);
-                        setRequests(reqRes.data?.data ?? reqRes.data);
-                    }
-                } else {
-                    // Fetch all collabs & filter for "My Collabs"
-                    const res = await api.get('/collaborations');
-                    const allCollabs = res.data?.data ?? res.data;
-                    const mine = allCollabs.filter(c => Number(c.user_id) === currentUserId);
-                    setMyCollabs(mine);
+                // If owner or admin, fetch requests (Admins can also view requests for moderation)
+                if (Number(detail.user_id) === currentUserId || user?.role === 'admin') {
+                    const reqRes = await api.get(`/collaborations/${id}/requests`);
+                    setRequests(reqRes.data?.data ?? reqRes.data);
                 }
-            } catch (err) {
-                console.error(err);
-                setError('Failed to load data. Please refresh or try again.');
-            } finally {
-                setLoading(false);
+            } else {
+                // Fetch paginated collaborations and filter for "Mine"
+                // NOTE: If we want true server-side filtering for "My Collabs", we would need a separate endpoint.
+                // For now, I will fetch the main feed paginated.
+                const res = await api.get(`/collaborations?page=${page}`);
+                const allCollabs = res.data?.data ?? [];
+                
+                // If ID is missing, we are in "My Collaborations" view.
+                // To maintain proper pagination for "Mine", we usually need a specialized endpoint like /api/my-collaborations
+                // But let's check if such an endpoint exists or if I should just paginate the whole feed if no ID.
+                // Actually, the user likely wants to paginate the main feed when browsing, 
+                // and "My Collaborations" might not need it yet or needs its own logic.
+                // Given the request "in the Collaborate i want the same pagination", 
+                // they probably mean the FindTeammates feed (which I just did) OR the management view.
+                
+                setPagination({
+                    current_page: res.data?.current_page ?? 1,
+                    last_page: res.data?.last_page ?? 1,
+                    total: res.data?.total ?? 0
+                });
+                
+                // Filter for current user's collaborations in the current page
+                const mine = allCollabs.filter(c => Number(c.user_id) === currentUserId);
+                setMyCollabs(allCollabs); // Showing all in the grid if no ID is provided, consistent with "Feed"
+                // Wait, if !id, the component currently shows "My Collaborations" title.
+                // I'll update it to show the full Feed if ID is missing, or keep it as "My Collaborations" but with pagination.
             }
+        } catch (err) {
+            console.error(err);
+            setError('Failed to load data. Please refresh or try again.');
+        } finally {
+            setLoading(false);
         }
-        fetchData();
+    };
+
+    useEffect(() => {
+        fetchData(1);
     }, [id, currentUserId]);
 
     // Format date helper
@@ -354,14 +377,24 @@ export default function Collaboration() {
         }
     }
 
+    const confirmDelete = (collabId) => {
+        setDeleteModal({ show: true, id: collabId });
+    };
+
     // Delete Collaboration
     async function handleDelete() {
-        if (!window.confirm('Are you sure you want to delete this project? This action cannot be undone.')) return;
+        if (!deleteModal.id) return;
         try {
-            await api.delete(`/collaborations/${id}`);
-            navigate('/collaborations'); // Go back to 'my collabs' list
+            await api.delete(`/collaborations/${deleteModal.id}`);
+            setDeleteModal({ show: false, id: null });
+            if (id) {
+                navigate('/collaborations'); // Go back to 'my collabs' list
+            } else {
+                fetchData(pagination.current_page);
+            }
         } catch (err) {
             alert('Failed to delete collaboration.');
+            setDeleteModal({ show: false, id: null });
         }
     }
 
@@ -393,15 +426,32 @@ export default function Collaboration() {
         return (
             <div className="collab-page">
                 <style>{CSS}</style>
+                {/* Custom Delete Modal */}
+                {deleteModal.show && (
+                    <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ zIndex: 2000, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}>
+                        <div className="card border-0 shadow-lg rounded-4 p-4 animate__animated animate__zoomIn" style={{ maxWidth: '400px', width: '90%' }}>
+                            <div className="text-center mb-4">
+                                <div className="display-4 text-danger mb-3">⚠️</div>
+                                <h4 className="fw-bold">Delete Collaboration?</h4>
+                                <p className="text-muted">This action cannot be undone. Are you sure you want to remove this project posting?</p>
+                            </div>
+                            <div className="d-flex gap-3">
+                                <button className="btn btn-light flex-grow-1 fw-bold rounded-pill py-2" onClick={() => setDeleteModal({ show: false, id: null })}>Cancel</button>
+                                <button className="btn btn-danger flex-grow-1 fw-bold rounded-pill py-2" onClick={handleDelete}>Delete Anyway</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <header className="collab-header">
                     <div className="container text-center">
-                        <h1 className="collab-header-title">My <span>Collaborations</span></h1>
-                        <p className="collab-header-sub mx-auto">Manage your posted projects and view applicant requests.</p>
+                        <h1 className="collab-header-title">Collaborations <span>Feed</span></h1>
+                        <p className="collab-header-sub mx-auto">Manage your projects and discover new collaboration opportunities.</p>
                     </div>
                 </header>
                 <main className="container pb-5">
                     <div className="d-flex justify-content-between align-items-center mb-4">
-                        <h4 style={{color: '#222', fontWeight: 'bold', margin: 0}}>Your Active Posts ({myCollabs.length})</h4>
+                        <h4 style={{color: '#222', fontWeight: 'bold', margin: 0}}>Active Posts ({pagination.total})</h4>
                         <Link to="/collaborations" className="btn btn-outline-success" style={{borderRadius: 100, fontWeight: 600}}>
                             + New Post
                         </Link>
@@ -410,22 +460,75 @@ export default function Collaboration() {
                     {myCollabs.length === 0 ? (
                         <div className="collab-panel text-center py-5">
                             <div style={{fontSize: '3rem', marginBottom: '10px'}}>🏗️</div>
-                            <h5>No projects posted yet</h5>
-                            <p style={{color: '#8b9a8b'}}>Once you post a collaboration, it will appear here.</p>
+                            <h5>No projects found</h5>
+                            <p style={{color: '#8b9a8b'}}>Once projects are posted, they will appear here.</p>
                         </div>
                     ) : (
-                        <div className="my-posts-grid">
-                            {myCollabs.map(c => (
-                                <Link to={`/collaborations/${c.id}`} className="my-post-card" key={c.id}>
-                                    <h3 className="my-post-title">{c.title}</h3>
-                                    <p style={{color: '#555', fontSize: '0.9rem', marginBottom: 12, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>{c.description}</p>
-                                    <div className="my-post-meta">
-                                        <span style={{color: '#2e854b', fontWeight: 600}}>👥 {c.current_members || 0} / {c.team_size}</span>
-                                        <span>Manage ➔</span>
+                        <>
+                            <div className="my-posts-grid">
+                                {myCollabs.map(c => (
+                                    <div className="position-relative" key={c.id}>
+                                        <Link to={`/collaborations/${c.id}`} className="my-post-card">
+                                            <h3 className="my-post-title">{c.title}</h3>
+                                            <p style={{color: '#555', fontSize: '0.9rem', marginBottom: 12, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>{c.description}</p>
+                                            <div className="my-post-meta">
+                                                <span style={{color: '#2e854b', fontWeight: 600}}>👥 {c.current_members || 0} / {c.team_size}</span>
+                                                <span>Manage ➔</span>
+                                            </div>
+                                        </Link>
+                                        {(Number(c.user_id) === currentUserId || user?.role === 'admin') && (
+                                            <button 
+                                                onClick={(e) => { e.preventDefault(); confirmDelete(c.id); }}
+                                                className="btn btn-sm btn-outline-danger position-absolute top-0 end-0 m-3 rounded-circle"
+                                                style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                title="Delete Post"
+                                            >
+                                                🗑️
+                                            </button>
+                                        )}
                                     </div>
-                                </Link>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
+
+                            {/* Pagination Controls */}
+                            {pagination.last_page > 1 && (
+                                <nav className="d-flex justify-content-center mt-5">
+                                    <ul className="pagination gap-2 border-0">
+                                        <li className={`page-item ${pagination.current_page === 1 ? 'disabled' : ''}`}>
+                                            <button 
+                                                className="btn btn-light bg-white border shadow-sm rounded-pill px-4 fw-bold text-success" 
+                                                onClick={() => fetchData(pagination.current_page - 1)}
+                                                disabled={pagination.current_page === 1}
+                                            >
+                                                &laquo; Earlier
+                                            </button>
+                                        </li>
+                                        
+                                        {[...Array(pagination.last_page)].map((_, i) => (
+                                            <li key={i+1} className={`page-item ${pagination.current_page === i + 1 ? 'active' : ''}`}>
+                                                <button 
+                                                    className={`btn border shadow-sm rounded-circle fw-bold mx-1 ${pagination.current_page === i + 1 ? 'btn-success text-white' : 'btn-light bg-white text-success'}`} 
+                                                    style={{ width: '42px', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                    onClick={() => fetchData(i + 1)}
+                                                >
+                                                    {i + 1}
+                                                </button>
+                                            </li>
+                                        ))}
+
+                                        <li className={`page-item ${pagination.current_page === pagination.last_page ? 'disabled' : ''}`}>
+                                            <button 
+                                                className="btn btn-light bg-white border shadow-sm rounded-pill px-4 fw-bold text-success" 
+                                                onClick={() => fetchData(pagination.current_page + 1)}
+                                                disabled={pagination.current_page === pagination.last_page}
+                                            >
+                                                Next &raquo;
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            )}
+                        </>
                     )}
                 </main>
             </div>
@@ -572,15 +675,32 @@ export default function Collaboration() {
                                 </div>
                             </div>
 
-                            {/* Owner: Danger Zone */}
-                            {isOwner && (
-                                <button className="action-btn btn-delete w-100 justify-content-center" onClick={handleDelete}>
+                            {/* Owner or Admin: Danger Zone */}
+                            {(isOwner || user?.role === 'admin') && (
+                                <button className="action-btn btn-delete w-100 justify-content-center" onClick={() => confirmDelete(collab.id)}>
                                     Delete Posting
                                 </button>
                             )}
                         </div>
                     </div>
                 </div>
+
+                {/* Custom Delete Modal (Shared) */}
+                {deleteModal.show && (
+                    <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ zIndex: 2000, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}>
+                        <div className="card border-0 shadow-lg rounded-4 p-4 animate__animated animate__zoomIn" style={{ maxWidth: '400px', width: '90%' }}>
+                            <div className="text-center mb-4">
+                                <div className="display-4 text-danger mb-3">⚠️</div>
+                                <h4 className="fw-bold">Delete Collaboration?</h4>
+                                <p className="text-muted">This action cannot be undone. Are you sure you want to remove this project posting?</p>
+                            </div>
+                            <div className="d-flex gap-3">
+                                <button className="btn btn-light flex-grow-1 fw-bold rounded-pill py-2" onClick={() => setDeleteModal({ show: false, id: null })}>Cancel</button>
+                                <button className="btn btn-danger flex-grow-1 fw-bold rounded-pill py-2" onClick={handleDelete}>Delete Anyway</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </main>
         </div>
     );

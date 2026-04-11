@@ -12,19 +12,14 @@ class PostController extends Controller
     // 1. Show all posts (The Wall)
     public function index()
     {
-        // Fetch posts with users, comments, and comment authors
+        // Fetch posts with users, comments, and comment authors, paginated
         $posts = Post::with([
             'user:id,name', 
             'comments.user:id,name'
         ])
         ->withCount('likes') 
         ->latest()
-        ->get()
-        ->map(function ($post) {
-            // Count reactions by type (optional but useful)
-            // For now, we'll just return the total count as likes_count
-            return $post;
-        });
+        ->paginate(10);
 
         return response()->json($posts);
     }

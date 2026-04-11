@@ -94,6 +94,10 @@ Route::middleware(['auth:sanctum', 'enforce.restrictions'])->group(function () {
         // URL: http://127.0.0.1:8000/api/post/comment/{id}
         Route::post('/comment/{id}', [CommentController::class, 'store']);
 
+        // 6. Delete Comment
+        // URL: http://127.0.0.1:8000/api/comment/{id}
+        Route::delete('/comment/{id}', [CommentController::class, 'destroy']);
+
     });
 
 
