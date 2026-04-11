@@ -21,7 +21,7 @@ class CollaborationService
     }
 
     public function getAllCollaborations() {
-        return Collaboration::with(['user:id,name', 'requests'])->latest()->get();
+        return Collaboration::with(['user:id,name', 'requests'])->latest()->paginate(10);
     }
 
     public function getSingleCollaboration($id) {
@@ -35,7 +35,13 @@ class CollaborationService
     }
 
     public function deleteCollaboration($id) {
-        $collab = Collaboration::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
-        return $collab->delete();
+        $collab = Collaboration::findOrFail($id);
+        $user = Auth::user();
+
+        if ($user->id === $collab->user_id || $user->role === 'admin') {
+            return $collab->delete();
+        }
+
+        abort(403, 'Unauthorized action.');
     }
 }

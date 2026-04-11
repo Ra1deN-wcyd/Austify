@@ -732,6 +732,7 @@ export default function FindTeammates() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
 
     // Track which collab IDs the user has already requested
     const [requestedIds, setRequestedIds] = useState(new Set());
@@ -743,23 +744,28 @@ export default function FindTeammates() {
     const currentUserId = user?.id ?? Number(localStorage.getItem('user_id') ?? 0);
 
     /* ── Fetch collaborations ── */
-    useEffect(() => {
-        async function fetchCollabs() {
-            setLoading(true);
-            setError(null);
-            try {
-                const res = await api.get('/collaborations');
-                const data = Array.isArray(res.data) ? res.data
-                    : Array.isArray(res.data?.data) ? res.data.data
-                    : [];
-                setCollabs(data);
-            } catch (err) {
-                setError('Failed to load collaborations. Please refresh.');
-            } finally {
-                setLoading(false);
-            }
+    const fetchCollabs = async (page = 1) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await api.get(`/collaborations?page=${page}`);
+            const data = res.data?.data ?? [];
+            setCollabs(data);
+            setPagination({
+                current_page: res.data?.current_page ?? 1,
+                last_page: res.data?.last_page ?? 1,
+                total: res.data?.total ?? 0
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (err) {
+            setError('Failed to load collaborations. Please refresh.');
+        } finally {
+            setLoading(false);
         }
-        fetchCollabs();
+    };
+
+    useEffect(() => {
+        fetchCollabs(1);
     }, []);
 
     /* ── Show toast helper ── */
@@ -885,6 +891,47 @@ export default function FindTeammates() {
                             />
                         ))}
                     </div>
+                )}
+
+                {/* Pagination Controls */}
+                {!loading && !error && pagination.last_page > 1 && (
+                    <nav className="d-flex justify-content-center mt-5">
+                        <ul className="pagination gap-2 border-0">
+                            <li className={`page-item ${pagination.current_page === 1 ? 'disabled' : ''}`}>
+                                <button 
+                                    className="btn btn-light bg-white border shadow-sm rounded-pill px-4 fw-bold text-success" 
+                                    onClick={() => fetchCollabs(pagination.current_page - 1)}
+                                    disabled={pagination.current_page === 1}
+                                    style={{ transition: 'all 0.2s' }}
+                                >
+                                    &laquo; Earlier
+                                </button>
+                            </li>
+                            
+                            {[...Array(pagination.last_page)].map((_, i) => (
+                                <li key={i+1} className={`page-item ${pagination.current_page === i + 1 ? 'active' : ''}`}>
+                                    <button 
+                                        className={`btn border shadow-sm rounded-circle fw-bold mx-1 ${pagination.current_page === i + 1 ? 'btn-success text-white' : 'btn-light bg-white text-success'}`} 
+                                        style={{ width: '42px', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+                                        onClick={() => fetchCollabs(i + 1)}
+                                    >
+                                        {i + 1}
+                                    </button>
+                                </li>
+                            ))}
+
+                            <li className={`page-item ${pagination.current_page === pagination.last_page ? 'disabled' : ''}`}>
+                                <button 
+                                    className="btn btn-light bg-white border shadow-sm rounded-pill px-4 fw-bold text-success" 
+                                    onClick={() => fetchCollabs(pagination.current_page + 1)}
+                                    disabled={pagination.current_page === pagination.last_page}
+                                    style={{ transition: 'all 0.2s' }}
+                                >
+                                    Next &raquo;
+                                </button>
+                            </li>
+                        </ul>
+                    </nav>
                 )}
             </main>
 

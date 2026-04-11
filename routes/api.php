@@ -30,7 +30,6 @@ Route::post('/accounts/login', [AuthController::class, 'login']);
 Route::post('/accounts/check-email', [AuthController::class, 'checkEmail']);
 Route::post('/accounts/resend-verification', [AuthController::class, 'resendVerificationEmail']);
 
-
 // --- PROTECTED ACCESS (Bearer Token Required) ---
 Route::middleware(['auth:sanctum', 'enforce.restrictions'])->group(function () {
     
@@ -94,6 +93,10 @@ Route::middleware(['auth:sanctum', 'enforce.restrictions'])->group(function () {
         // 5. Comment on Post
         // URL: http://127.0.0.1:8000/api/post/comment/{id}
         Route::post('/comment/{id}', [CommentController::class, 'store']);
+
+        // 6. Delete Comment
+        // URL: http://127.0.0.1:8000/api/comment/{id}
+        Route::delete('/comment/{id}', [CommentController::class, 'destroy']);
 
     });
 
