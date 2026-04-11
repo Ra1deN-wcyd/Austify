@@ -3,10 +3,18 @@ services:
     build: .
     container_name: austify-app
     restart: unless-stopped
+    env_file: .env
     volumes:
+      # Mount source code for live editing
       - .:/var/www/html
+      # Protect Docker-built vendor and compiled assets from being overwritten by the volume mount
+      - vendor_data:/var/www/html/vendor
+      - build_data:/var/www/html/public/build
     ports:
       - "8000:80"
+    depends_on:
+      mssql:
+        condition: service_healthy
     networks:
       - austify-network
 
@@ -16,12 +24,25 @@ services:
     restart: unless-stopped
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "YourStrongPassword123!" # Change this!
+      MSSQL_SA_PASSWORD: "YourStrongPassword123!"
     ports:
-      - "1433:1433" # Port for SSMS
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "YourStrongPassword123!" -Q "SELECT 1" -No
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     networks:
       - austify-network
 
 networks:
   austify-network:
     driver: bridge
+
+volumes:
+  mssql_data:
+  vendor_data:
+  build_data:
