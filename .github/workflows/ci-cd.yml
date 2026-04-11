@@ -7,7 +7,6 @@ on:
     branches: [ "develop" ]
 
 env:
-  # This fixes the Node.js warning you saw
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
@@ -22,12 +21,6 @@ jobs:
           MSSQL_SA_PASSWORD: Password123!
         ports:
           - 1433:1433
-        # Logic: Wait until SQL Server is actually healthy before starting
-        options: >-
-          --health-cmd="/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Password123!' -C -Q 'SELECT 1'"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
 
     steps:
       - uses: actions/checkout@v4
@@ -52,18 +45,20 @@ jobs:
         run: |
           cp .env.example .env
           php artisan key:generate
-          # Ensure storage is writable in the cloud environment
           chmod -R 777 storage bootstrap/cache
 
       - name: Run Migrations
-        run: php artisan migrate --force
+        # Added --database=sqlsrv to be explicit
+        run: php artisan migrate --force --database=sqlsrv
         env:
           DB_CONNECTION: sqlsrv
           DB_HOST: 127.0.0.1
           DB_PORT: 1433
-          DB_DATABASE: tempdb
+          DB_DATABASE: master # 'master' always exists on MSSQL
           DB_USERNAME: sa
           DB_PASSWORD: Password123!
+          # This helps with SSL issues in CI
+          DB_TRUST_SERVER_CERTIFICATE: true
 
       - name: Execute Tests
         run: php artisan test
@@ -71,6 +66,7 @@ jobs:
           DB_CONNECTION: sqlsrv
           DB_HOST: 127.0.0.1
           DB_PORT: 1433
-          DB_DATABASE: tempdb
+          DB_DATABASE: master
           DB_USERNAME: sa
           DB_PASSWORD: Password123!
+          DB_TRUST_SERVER_CERTIFICATE: true
