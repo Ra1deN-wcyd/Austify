@@ -137,7 +137,7 @@ function Navbar() {
                                 <NavLink className={({isActive}) => `nav-link ${isActive ? 'active-link' : ''}`} to="/problem">Problem</NavLink>
                             </li>
                             <li className="nav-item">
-                                <a className="nav-link" href="#">Resources</a>
+                                <NavLink className={({isActive}) => `nav-link ${isActive ? 'active-link' : ''}`} to="/resources">Resources</NavLink>
                             </li>
 
                             <div className="d-flex align-items-center ms-lg-3 gap-2">
