@@ -7,21 +7,48 @@ on:
     branches: [ "develop" ]
 
 jobs:
-  # Job 1: Testing the logic
   test-logic:
     runs-on: ubuntu-latest
+
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          MSSQL_SA_PASSWORD: Password123!
+        ports:
+          - 1433:1433
+
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install Microsoft SQL Server Drivers
+        run: |
+          curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
+          curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
           extensions: mbstring, dom, fileinfo, sqlsrv, pdo_sqlsrv
-
+          
       - name: Install Dependencies
         run: composer install --prefer-dist --no-progress
 
+      - name: Prepare Environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
       - name: Run Tests
-        # This will run any tests in your 'tests' folder
         run: php artisan test
+        env:
+          DB_CONNECTION: sqlsrv
+          DB_HOST: 127.0.0.1
+          DB_PORT: 1433
+          DB_DATABASE: tempdb
+          DB_USERNAME: sa
+          DB_PASSWORD: Password123!
