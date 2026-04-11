@@ -36,11 +36,15 @@ class Handler extends ExceptionHandler
             ], 400);
         }
 
-        // Default response for unexpected exceptions
-        return response()->json([
-            'error' => true,
-            'message' => 'An unexpected error occurred',
-        ], 500);
+        // Default response for unexpected exceptions (only in production)
+        if (app()->environment('production')) {
+            return response()->json([
+                'error' => true,
+                'message' => 'An unexpected error occurred',
+            ], 500);
+        }
+
+        return parent::render($request, $exception);
 
     }
 

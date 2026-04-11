@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('conversations', function (Blueprint $table) {
-            $table->id();
+        // For simplicity, we won't add a separate pivot table for conversation participants in this example.  
+        $table->id();
             $table->string('name')->nullable(); // For group chats
             $table->timestamps();
         });

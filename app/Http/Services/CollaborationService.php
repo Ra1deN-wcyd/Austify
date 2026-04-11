@@ -21,7 +21,7 @@ class CollaborationService
     }
 
     public function getAllCollaborations() {
-        return Collaboration::with('user:id,name')->latest()->get();
+        return Collaboration::with(['user:id,name', 'requests'])->latest()->get();
     }
 
     public function getSingleCollaboration($id) {

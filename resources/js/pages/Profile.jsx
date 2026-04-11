@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../api/api';
 
 function Profile() {
@@ -53,6 +54,8 @@ function Profile() {
 
     const role = user.role || 'member';
     const points = user.points ?? user.bonus_points ?? 0;
+    const timeoutUntilDate = user.timeout_until ? new Date(user.timeout_until) : null;
+    const isReadOnly = role !== 'admin' && timeoutUntilDate && timeoutUntilDate.getTime() > Date.now();
 
     return (
         <>
@@ -121,6 +124,34 @@ function Profile() {
                 .points-num { font-family:'Bricolage Grotesque',sans-serif; font-size:2.4rem; font-weight:800; color:var(--leaf); line-height:1; }
                 .points-lbl { font-size:0.7rem; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.4); margin-top:3px; }
                 .points-right { margin-left:auto; opacity:.2; font-size:3.5rem; line-height:1; }
+                .admin-cta-wrap { margin: 0 32px 20px; }
+                .admin-cta {
+                    width: 100%;
+                    border: none;
+                    border-radius: 14px;
+                    padding: 14px 18px;
+                    font-family: 'Bricolage Grotesque', sans-serif;
+                    font-weight: 700;
+                    font-size: 0.95rem;
+                    color: #fff;
+                    background: linear-gradient(135deg, #92400e, #b45309);
+                    text-decoration: none;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 10px 28px rgba(146,64,14,.25);
+                }
+                .readonly-note {
+                    margin: 0 32px 20px;
+                    border-radius: 14px;
+                    padding: 12px 14px;
+                    background: #fff7ed;
+                    color: #9a3412;
+                    border: 1px solid #fed7aa;
+                    font-size: 0.84rem;
+                    font-weight: 600;
+                    line-height: 1.4;
+                }
                 .info-section { padding:0 32px 28px; }
                 .section-title { font-size:0.65rem; font-weight:600; letter-spacing:2.5px; text-transform:uppercase; color:var(--muted); margin-bottom:12px; }
                 .field {
@@ -187,6 +218,18 @@ function Profile() {
                         </div>
                         <div className="points-right">✦</div>
                     </div>
+
+                    {role === 'admin' && (
+                        <div className="admin-cta-wrap">
+                            <Link to="/admin/dashboard" className="admin-cta">🛠️ Admin Dashboard</Link>
+                        </div>
+                    )}
+
+                    {isReadOnly && (
+                        <div className="readonly-note">
+                            You are in read-only mode until {timeoutUntilDate.toLocaleString()} due to a community violation.
+                        </div>
+                    )}
 
                     <div className="info-section">
                         <div className="section-title">Profile Details</div>

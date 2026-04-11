@@ -3,20 +3,27 @@ import api from '../api/api';
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 
-// Setup Laravel Echo
+// Setup Laravel Echo - Helper to get fresh instance with token
 window.Pusher = Pusher;
-const echo = new Echo({
-    broadcaster: 'pusher',
-    key: import.meta.env.VITE_PUSHER_APP_KEY,
-    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER ?? 'ap2',
-    forceTLS: true,
-    authEndpoint: 'http://127.0.0.1:8000/broadcasting/auth',
-    auth: {
-        headers: {
-            Authorization: `Bearer ${localStorage.getItem('austify_token')}`,
+const getEcho = () => {
+    const token = localStorage.getItem('austify_token');
+    const authEndpoint = import.meta.env.VITE_BROADCAST_AUTH_ENDPOINT ?? 'http://127.0.0.1:8000/api/broadcasting/auth';
+    
+    if (!token) return null;
+
+    return new Echo({
+        broadcaster: 'pusher',
+        key: import.meta.env.VITE_PUSHER_APP_KEY,
+        cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER ?? 'ap2',
+        forceTLS: true,
+        authEndpoint: authEndpoint,
+        auth: {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
         },
-    },
-});
+    });
+};
 
 export default function Chat() {
     const [conversations, setConversations] = useState([]);
@@ -51,21 +58,21 @@ export default function Chat() {
     // ── Subscribe to Pusher channel for active conversation ───────────────────
     useEffect(() => {
         if (!activeConv) return;
-
-        // Leave previous channel
-        if (channelRef.current) {
-            echo.leave(`conversation.${channelRef.current}`);
-        }
-        channelRef.current = activeConv.id;
+        const echo = getEcho();
+        if (!echo) return;
 
         const channel = echo.private(`conversation.${activeConv.id}`);
 
         channel.listen('.message.sent', (e) => {
-            if (parseInt(e.message.user_id) !== getCurrentUserId()) {
-                setMessages(prev => [...prev, e.message]);
-                // Mark as seen immediately
+            const incoming = e.message || e;
+            if (parseInt(incoming.user_id) !== getCurrentUserId()) {
+                setMessages(prev => [...prev, incoming]);
                 api.post(`/chat/conversations/${activeConv.id}/seen`).catch(() => { });
             }
+            // Sidebar snippet update
+            setConversations(prev =>
+                prev.map(c => c.id === activeConv.id ? { ...c, last_message: incoming } : c)
+            );
         });
 
         channel.listen('.message.read', () => {
@@ -86,19 +93,20 @@ export default function Chat() {
 
         return () => {
             echo.leave(`conversation.${activeConv.id}`);
-            channelRef.current = null;
+            echo.disconnect(); // Ensure connection is cleaned up to prevent leaks
         };
     }, [activeConv]);
 
     // ── Open a conversation ───────────────────────────────────────────────────
     const openConversation = async (conv) => {
+        if (activeConv?.id === conv.id) return;
         setActiveConv(conv);
+        setMessages([]); // Clear viewport immediately
         setLoading(true);
         try {
             const res = await api.get(`/chat/conversations/${conv.id}/messages`);
             setMessages(res.data.data?.data ?? []);
             await api.post(`/chat/conversations/${conv.id}/seen`);
-            // Clear unread badge
             setConversations(prev =>
                 prev.map(c => c.id === conv.id ? { ...c, unread_count: 0 } : c)
             );
@@ -119,7 +127,11 @@ export default function Chat() {
                 conversation_id: activeConv.id,
                 body,
             });
-            setMessages(prev => [...prev, res.data.data]);
+            const sentMsg = res.data.data;
+            setMessages(prev => [...prev, sentMsg]);
+            setConversations(prev =>
+                prev.map(c => c.id === activeConv.id ? { ...c, last_message: sentMsg } : c)
+            );
         } catch (e) {
             console.error(e);
         }

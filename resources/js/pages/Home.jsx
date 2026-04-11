@@ -1,8 +1,13 @@
 import { useContext } from "react";
+import { Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
 export default function Home() {
     const { user } = useContext(AuthContext);
+
+    const role = user?.role || 'member';
+    const timeoutUntilDate = user?.timeout_until ? new Date(user.timeout_until) : null;
+    const isReadOnly = role !== 'admin' && timeoutUntilDate && timeoutUntilDate.getTime() > Date.now();
 
     const features = [
         {
@@ -20,6 +25,7 @@ export default function Home() {
             title: "Real-time Chat",
             desc: "Communicate instantly with other students.",
         },
+
         {
             icon: "📂",
             title: "Share Resources",
@@ -39,6 +45,11 @@ export default function Home() {
 
     return (
         <>
+            {isReadOnly && (
+                <div className="alert alert-warning text-center m-0 border-0 rounded-0" style={{ backgroundColor: '#fff7ed', color: '#9a3412', borderBottom: '1px solid #fed7aa', zIndex: 1000, position: 'relative' }}>
+                    <strong>⚠️ Read-only Mode:</strong> Your account is restricted until {timeoutUntilDate.toLocaleString()} due to a community violation.
+                </div>
+            )}
             {/* Hero Section */}
             <section className="bg-dark text-white text-center py-5">
                 <div className="container">

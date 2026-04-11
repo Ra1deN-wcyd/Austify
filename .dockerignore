@@ -1,0 +1,9 @@
+.git
+.editorconfig
+node_modules
+vendor
+storage/*.key
+.phpunit.result.cache
+docker-compose.yml
+Dockerfile
+.env
