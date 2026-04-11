@@ -38,10 +38,13 @@ export default function Resources() {
     const [loading, setLoading] = useState(false);
     const [fetchError, setFetchError] = useState(null);
     const [activeVideo, setActiveVideo] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 9;
 
     // Modal state
     const [showModal, setShowModal] = useState(false);
-    const [form, setForm] = useState({ title: '', url: '', description: '' });
+    const [form, setForm] = useState({ title: '', url: '', description: '', file: null });
+    const [uploadType, setUploadType] = useState('link'); // 'link' | 'file'
     const [submitting, setSubmitting] = useState(false);
     const [formError, setFormError] = useState('');
 
@@ -61,6 +64,7 @@ export default function Resources() {
                 params: { semester: sem, course: crs }
             });
             setVideos(Array.isArray(res.data) ? res.data : []);
+            setCurrentPage(1);
         } catch (err) {
             console.error('Failed to load videos:', err);
             setFetchError('Could not load videos. Please check your connection.');
@@ -71,10 +75,17 @@ export default function Resources() {
 
     const filteredCourses = useMemo(() => {
         if (!semester) return [];
-        return (courseMap[semester] || []).filter(c => 
+        return (courseMap[semester] || []).filter(c =>
             c.toLowerCase().includes(courseSearch.toLowerCase())
         );
     }, [semester, courseSearch]);
+
+    const paginatedVideos = useMemo(() => {
+        const start = (currentPage - 1) * itemsPerPage;
+        return videos.slice(start, start + itemsPerPage);
+    }, [videos, currentPage]);
+
+    const totalPages = Math.ceil(videos.length / itemsPerPage);
 
     function handleSemesterClick(s) {
         setSemester(s);
@@ -97,7 +108,11 @@ export default function Resources() {
     }
 
     function handleFormChange(e) {
-        setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+        if (e.target.name === 'file') {
+            setForm(prev => ({ ...prev, file: e.target.files[0] }));
+        } else {
+            setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+        }
         setFormError('');
     }
 
@@ -106,29 +121,33 @@ export default function Resources() {
         setFormError('');
 
         // Basic validation
-        if (!form.title.trim() || !form.url.trim()) {
-            setFormError('Title and URL are required.');
+        if (!form.title.trim()) {
+            setFormError('Title is required.');
+            return;
+        }
+        if (!form.url.trim() && !form.file) {
+            setFormError('You must provide either a YouTube URL or upload a file.');
             return;
         }
 
-        const embedPossible = getEmbedUrl(form.url);
-        if (embedPossible === form.url && !form.url.includes('youtube.com')) {
-           setFormError('Please enter a valid YouTube URL (e.g., https://www.youtube.com/watch?v=...)');
-           return;
-        }
+        // No URL format restriction — any link is valid (YouTube, Google Drive, etc.)
 
         setSubmitting(true);
         try {
-            const res = await api.post('/videos', {
-                title: form.title,
-                url: form.url,
-                description: form.description,
-                semester: semester,
-                course: course,
+            const formData = new FormData();
+            formData.append('title', form.title);
+            formData.append('description', form.description);
+            formData.append('semester', semester);
+            formData.append('course', course);
+            if (form.url) formData.append('url', form.url);
+            if (form.file) formData.append('file', form.file);
+
+            const res = await api.post('/videos', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
             const newVideo = res.data;
             setVideos(prev => [newVideo, ...prev]);
-            setForm({ title: '', url: '', description: '' });
+            setForm({ title: '', url: '', description: '', file: null });
             setShowModal(false);
         } catch (err) {
             console.error('Add video error:', err);
@@ -142,7 +161,8 @@ export default function Resources() {
     }
 
     function openModal() {
-        setForm({ title: '', url: '', description: '' });
+        setForm({ title: '', url: '', description: '', file: null });
+        setUploadType('link');
         setFormError('');
         setShowModal(true);
     }
@@ -407,8 +427,8 @@ export default function Resources() {
                     </div>
                     <div className="res-semester-grid">
                         {semesters.map(s => (
-                            <div 
-                                key={s} 
+                            <div
+                                key={s}
                                 className={`res-semester-btn ${semester === s ? 'res-active' : ''}`}
                                 onClick={() => handleSemesterClick(s)}
                             >
@@ -425,20 +445,20 @@ export default function Resources() {
                     <section className="res-courses-section">
                         <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
                             <h2 className="res-label m-0">2. Browse Courses for {semester}</h2>
-                            <input 
-                                type="text" 
-                                className="res-search-input" 
-                                placeholder="Search courses..." 
+                            <input
+                                type="text"
+                                className="res-search-input"
+                                placeholder="Search courses..."
                                 value={courseSearch}
                                 onChange={(e) => setCourseSearch(e.target.value)}
                             />
                         </div>
-                        
+
                         {filteredCourses.length > 0 ? (
                             <div className="res-course-grid">
                                 {filteredCourses.map(c => (
-                                    <div 
-                                        key={c} 
+                                    <div
+                                        key={c}
                                         className={`res-course-card ${course === c ? 'res-active' : ''}`}
                                         onClick={() => handleCourseClick(c)}
                                     >
@@ -467,7 +487,7 @@ export default function Resources() {
                         <div className="res-toolbar">
                             <div className="d-flex flex-column">
                                 <button className="res-btn-back mb-1" onClick={() => setCourse(null)}>
-                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                                     All Courses
                                 </button>
                                 <span className="small text-secondary fw-semibold">
@@ -475,7 +495,7 @@ export default function Resources() {
                                 </span>
                             </div>
                             <button className="btn btn-success rounded-3 px-4 fw-bold shadow-sm" onClick={openModal}>
-                                + Share Video
+                                + Add Resource
                             </button>
                         </div>
 
@@ -494,40 +514,68 @@ export default function Resources() {
                             </div>
                         ) : videos.length === 0 ? (
                             <div className="text-center py-5 border border-secondary border-dashed rounded-4" style={{ borderStyle: 'dashed' }}>
-                                <div style={{ fontSize: '3.5rem' }}>🎬</div>
-                                <h3 className="mt-4 fw-bold">No videos yet</h3>
+                                <div style={{ fontSize: '3.5rem' }}>📂</div>
+                                <h3 className="mt-4 fw-bold">No resources yet</h3>
                                 <p className="text-secondary pb-4">Be the first to share a lecture or resource for this course!</p>
-                                <button className="btn btn-success btn-lg px-5 rounded-pill" onClick={openModal}>+ Add Content</button>
+                                <button className="btn btn-success btn-lg px-5 rounded-pill" onClick={openModal}>+ Add Resource</button>
                             </div>
                         ) : (
-                            <div className="res-video-grid">
-                                {videos.map(v => {
+                            <>
+                                <div className="res-video-grid">
+                                    {paginatedVideos.map(v => {
+                                        const isFile = !!v.file_path;
+                                    const isYoutube = !isFile && !!v.url && /youtu\.be|youtube\.com/.test(v.url);
+                                    const isExternalLink = !isFile && !isYoutube && !!v.url;
                                     const isPlaying = activeVideo === v.id;
-                                    const embedUrl = getEmbedUrl(v.url);
+                                    const embedUrl = isYoutube ? getEmbedUrl(v.url) : null;
+
                                     return (
-                                        <div 
-                                            key={v.id} 
+                                        <div
+                                            key={v.id}
                                             className={`res-video-card ${isPlaying ? 'res-playing' : ''}`}
-                                            onClick={() => !isPlaying && setActiveVideo(v.id)}
+                                            onClick={() => {
+                                                if (isFile || isExternalLink) {
+                                                    const href = isFile
+                                                        ? `http://127.0.0.1:8000/storage/${v.file_path}`
+                                                        : v.url;
+                                                    window.open(href, '_blank');
+                                                } else if (isYoutube && !isPlaying) {
+                                                    setActiveVideo(v.id);
+                                                }
+                                            }}
                                         >
                                             <div className="res-thumb-wrap">
-                                                {isPlaying ? (
-                                                    <iframe 
-                                                        src={`${embedUrl}?autoplay=1&modestbranding=1`} 
-                                                        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" 
-                                                        allowFullScreen 
+                                                {isFile ? (
+                                                    <div className="w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-light" style={{ color: '#48bb78' }}>
+                                                        <svg width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
+                                                            <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5z" />
+                                                        </svg>
+                                                        <span className="mt-2 fw-bold text-secondary">File Attachment</span>
+                                                    </div>
+                                                ) : isExternalLink ? (
+                                                    <div className="w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-light" style={{ color: '#48bb78' }}>
+                                                        <svg width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
+                                                            <path d="M4.5 3a2.5 2.5 0 0 1 5 0v9a1.5 1.5 0 0 1-3 0V5a.5.5 0 0 1 1 0v7a.5.5 0 0 0 1 0V3a1.5 1.5 0 1 0-3 0v9a2.5 2.5 0 0 0 5 0V5a.5.5 0 0 1 1 0v7a3.5 3.5 0 1 1-7 0V3z" />
+                                                        </svg>
+                                                        <span className="mt-2 fw-bold text-secondary">External Link</span>
+                                                    </div>
+                                                ) : isPlaying ? (
+                                                    <iframe
+                                                        src={`${embedUrl}?autoplay=1&modestbranding=1`}
+                                                        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                                                        allowFullScreen
                                                     />
                                                 ) : (
                                                     <>
-                                                        <img 
-                                                            src={`https://img.youtube.com/vi/${embedUrl.split('/').pop()}/mqdefault.jpg`} 
+                                                        <img
+                                                            src={`https://img.youtube.com/vi/${embedUrl.split('/').pop()}/mqdefault.jpg`}
                                                             alt={v.title}
                                                             className="w-100 h-100 object-fit-cover"
                                                             onError={(e) => { e.target.src = 'https://via.placeholder.com/480x270/1A1D21/FFFFFF?text=Resource'; }}
                                                         />
                                                         <div className="res-play-overlay">
                                                             <div className="res-play-btn">
-                                                                <svg width="24" height="24" fill="white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                                                <svg width="24" height="24" fill="white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
                                                             </div>
                                                         </div>
                                                     </>
@@ -538,14 +586,56 @@ export default function Resources() {
                                                 <h3 className="res-video-title">{v.title}</h3>
                                                 {v.description && <p className="res-video-desc">{v.description}</p>}
                                                 <div className="mt-3 pt-3 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
-                                                    <span className="small text-secondary fw-medium">Student Share</span>
-                                                    <a href={v.url} target="_blank" rel="noreferrer" className="text-success text-decoration-none small fw-bold">Watch on YouTube</a>
+                                                    <span className="small text-secondary fw-medium">
+                                                        📤 Uploaded by <strong>{v.uploader_name || 'Anonymous'}</strong>
+                                                    </span>
+                                                    {isFile ? (
+                                                        <a href={`http://127.0.0.1:8000/storage/${v.file_path}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="btn btn-sm btn-outline-success fw-bold rounded-pill px-3">
+                                                            Download / View
+                                                        </a>
+                                                    ) : isExternalLink ? (
+                                                        <a href={v.url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="btn btn-sm btn-outline-success fw-bold rounded-pill px-3">
+                                                            Open Link
+                                                        </a>
+                                                    ) : (
+                                                        <a href={v.url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="text-success text-decoration-none small fw-bold">Watch on YouTube</a>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
                                     );
                                 })}
-                            </div>
+                                </div>
+                                {totalPages > 1 && (
+                                    <div className="d-flex justify-content-center align-items-center mt-5 gap-3" style={{ animation: 'resFadeIn 0.5s ease' }}>
+                                        <button 
+                                            className="btn btn-outline-success fw-bold px-4 rounded-pill" 
+                                            disabled={currentPage === 1}
+                                            onClick={() => {
+                                                setCurrentPage(p => Math.max(1, p - 1));
+                                                const el = document.getElementById('vids');
+                                                if (el) el.scrollIntoView({ behavior: 'smooth' });
+                                            }}
+                                        >
+                                            &larr; Previous
+                                        </button>
+                                        <div className="bg-white border rounded-pill px-4 py-2 text-secondary fw-bold shadow-sm">
+                                            Page <span className="text-dark">{currentPage}</span> of <span className="text-dark">{totalPages}</span>
+                                        </div>
+                                        <button 
+                                            className="btn btn-outline-success fw-bold px-4 rounded-pill" 
+                                            disabled={currentPage === totalPages}
+                                            onClick={() => {
+                                                setCurrentPage(p => Math.min(totalPages, p + 1));
+                                                const el = document.getElementById('vids');
+                                                if (el) el.scrollIntoView({ behavior: 'smooth' });
+                                            }}
+                                        >
+                                            Next &rarr;
+                                        </button>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </section>
                 )}
@@ -556,18 +646,18 @@ export default function Resources() {
                 <div className="res-backdrop" onClick={(e) => e.target === e.currentTarget && setShowModal(false)}>
                     <div className="res-modal">
                         <div className="d-flex justify-content-between align-items-center mb-4">
-                            <h3 className="h5 fw-bold m-0 text-success">📹 Share Resource</h3>
+                            <h3 className="h5 fw-bold m-0 text-success">📁 Share Resource</h3>
                             <button className="btn-close btn-close-white" onClick={() => setShowModal(false)} />
                         </div>
-                        
+
                         <p className="small text-secondary mb-4 p-3 rounded-3 bg-light border">
-                            You are adding a resource for <br/>
+                            You are adding a resource for <br />
                             <strong className="text-dark">{course}</strong> (Sem {semester})
                         </p>
 
                         {formError && (
                             <div className="alert alert-danger px-3 py-2 small mb-3 border-0 rounded-3 d-flex align-items-center">
-                                <svg className="me-2" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
+                                <svg className="me-2" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z" /></svg>
                                 {formError}
                             </div>
                         )}
@@ -575,40 +665,85 @@ export default function Resources() {
                         <form onSubmit={handleAddVideo}>
                             <div className="mb-3">
                                 <label className="form-label small text-secondary fw-bold">RESOURCE TITLE</label>
-                                <input 
-                                    name="title" 
-                                    className="form-control bg-white border-secondary bg-opacity-10 text-dark p-2 px-3" 
-                                    placeholder="e.g. Master Branch & Bound in 10 mins" 
+                                <input
+                                    name="title"
+                                    className="form-control bg-white border-secondary bg-opacity-10 text-dark p-2 px-3"
+                                    placeholder="e.g. Master Branch & Bound in 10 mins"
                                     value={form.title}
                                     onChange={handleFormChange}
                                     required
                                 />
                             </div>
                             <div className="mb-3">
-                                <label className="form-label small text-secondary fw-bold">YOUTUBE LINK</label>
-                                <input 
-                                    name="url" 
-                                    className="form-control bg-white border-secondary bg-opacity-10 text-dark p-2 px-3"
-                                    placeholder="https://www.youtube.com/watch?v=..." 
-                                    value={form.url}
-                                    onChange={handleFormChange}
-                                    required
-                                />
+                                <label className="form-label small text-secondary fw-bold">RESOURCE TYPE</label>
+                                <div style={{
+                                    display: 'grid', gridTemplateColumns: '1fr 1fr',
+                                    border: '1px solid #dee2e6', borderRadius: '10px', overflow: 'hidden'
+                                }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => { setUploadType('link'); setForm(p => ({ ...p, file: null })); }}
+                                        style={{
+                                            padding: '10px', border: 'none', cursor: 'pointer', fontWeight: 600,
+                                            fontSize: '0.88rem', transition: 'all 0.2s',
+                                            background: uploadType === 'link' ? '#48bb78' : '#f8f9fa',
+                                            color: uploadType === 'link' ? '#fff' : '#555',
+                                        }}
+                                    >
+                                        🔗 Link
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => { setUploadType('file'); setForm(p => ({ ...p, url: '' })); }}
+                                        style={{
+                                            padding: '10px', border: 'none', borderLeft: '1px solid #dee2e6',
+                                            cursor: 'pointer', fontWeight: 600, fontSize: '0.88rem', transition: 'all 0.2s',
+                                            background: uploadType === 'file' ? '#48bb78' : '#f8f9fa',
+                                            color: uploadType === 'file' ? '#fff' : '#555',
+                                        }}
+                                    >
+                                        📁 Upload File
+                                    </button>
+                                </div>
                             </div>
+
+                            {uploadType === 'link' ? (
+                                <div className="mb-3">
+                                    <label className="form-label small text-secondary fw-bold">LINK</label>
+                                    <input
+                                        name="url"
+                                        className="form-control bg-white border-secondary bg-opacity-10 text-dark p-2 px-3"
+                                        placeholder="e.g. https://www.youtube.com/... or https://drive.google.com/..."
+                                        value={form.url}
+                                        onChange={handleFormChange}
+                                    />
+                                </div>
+                            ) : (
+                                <div className="mb-3">
+                                    <label className="form-label small text-secondary fw-bold">UPLOAD FILE</label>
+                                    <input
+                                        type="file"
+                                        name="file"
+                                        className="form-control bg-white border-secondary bg-opacity-10 text-dark p-2 px-3"
+                                        onChange={handleFormChange}
+                                    />
+                                    <div className="form-text small">Supported: txt, pdf, zip, asm, exe, and more</div>
+                                </div>
+                            )}
                             <div className="mb-4">
                                 <label className="form-label small text-secondary fw-bold">DESCRIPTION (OPTIONAL)</label>
-                                <textarea 
-                                    name="description" 
-                                    className="form-control bg-white border-secondary bg-opacity-10 text-dark p-2 px-3" 
+                                <textarea
+                                    name="description"
+                                    className="form-control bg-white border-secondary bg-opacity-10 text-dark p-2 px-3"
                                     rows="3"
-                                    placeholder="What does this video cover?" 
+                                    placeholder="What does this video cover?"
                                     value={form.description}
                                     onChange={handleFormChange}
                                 />
                             </div>
-                            <button 
-                                className="btn btn-success btn-lg w-100 fw-bold rounded-3 py-3" 
-                                type="submit" 
+                            <button
+                                className="btn btn-success btn-lg w-100 fw-bold rounded-3 py-3"
+                                type="submit"
                                 disabled={submitting}
                             >
                                 {submitting ? 'Sharing...' : 'Add to Collection'}

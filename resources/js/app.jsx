@@ -10,6 +10,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
+import Resources from './pages/Resources';
 import Collaborations from './pages/Collaboration'; // fixed the file path
 import FindTeammates from './pages/FindTeammates';
 import Resources from './pages/Resources';
