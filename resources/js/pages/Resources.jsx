@@ -34,10 +34,10 @@ export default function Resources() {
     const [semester, setSemester] = useState(null);
     const [course, setCourse] = useState(null);
     const [courseSearch, setCourseSearch] = useState('');
-    const [videos, setVideos] = useState([]);
+    const [resources, setResources] = useState([]);
     const [loading, setLoading] = useState(false);
     const [fetchError, setFetchError] = useState(null);
-    const [activeVideo, setActiveVideo] = useState(null);
+    const [activeYoutubeClip, setActiveYoutubeClip] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 9;
 
@@ -50,24 +50,24 @@ export default function Resources() {
 
     useEffect(() => {
         if (semester && course) {
-            loadVideos(semester, course);
+            loadResources(semester, course);
         }
     }, [semester, course]);
 
-    async function loadVideos(sem, crs) {
+    async function loadResources(sem, crs) {
         setLoading(true);
-        setVideos([]);
+        setResources([]);
         setFetchError(null);
-        setActiveVideo(null);
+        setActiveYoutubeClip(null);
         try {
             const res = await api.get('/videos', {
                 params: { semester: sem, course: crs }
             });
-            setVideos(Array.isArray(res.data) ? res.data : []);
+            setResources(Array.isArray(res.data) ? res.data : []);
             setCurrentPage(1);
         } catch (err) {
-            console.error('Failed to load videos:', err);
-            setFetchError('Could not load videos. Please check your connection.');
+            console.error('Failed to load resources:', err);
+            setFetchError('Could not load resources. Please check your connection.');
         } finally {
             setLoading(false);
         }
@@ -80,25 +80,25 @@ export default function Resources() {
         );
     }, [semester, courseSearch]);
 
-    const paginatedVideos = useMemo(() => {
+    const paginatedResources = useMemo(() => {
         const start = (currentPage - 1) * itemsPerPage;
-        return videos.slice(start, start + itemsPerPage);
-    }, [videos, currentPage]);
+        return resources.slice(start, start + itemsPerPage);
+    }, [resources, currentPage]);
 
-    const totalPages = Math.ceil(videos.length / itemsPerPage);
+    const totalPages = Math.ceil(resources.length / itemsPerPage);
 
     function handleSemesterClick(s) {
         setSemester(s);
         setCourse(null);
         setCourseSearch('');
-        setVideos([]);
-        setActiveVideo(null);
+        setResources([]);
+        setActiveYoutubeClip(null);
         setFetchError(null);
     }
 
     function handleCourseClick(c) {
         setCourse(c);
-        setActiveVideo(null);
+        setActiveYoutubeClip(null);
         setFetchError(null);
         // Better scrolling to the video section
         setTimeout(() => {
@@ -116,7 +116,7 @@ export default function Resources() {
         setFormError('');
     }
 
-    async function handleAddVideo(e) {
+    async function handleAddResource(e) {
         e.preventDefault();
         setFormError('');
 
@@ -126,7 +126,7 @@ export default function Resources() {
             return;
         }
         if (!form.url.trim() && !form.file) {
-            setFormError('You must provide either a YouTube URL or upload a file.');
+            setFormError('You must provide either a link or upload a file.');
             return;
         }
 
@@ -145,15 +145,15 @@ export default function Resources() {
             const res = await api.post('/videos', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            const newVideo = res.data;
-            setVideos(prev => [newVideo, ...prev]);
+            const newResource = res.data;
+            setResources(prev => [newResource, ...prev]);
             setForm({ title: '', url: '', description: '', file: null });
             setShowModal(false);
         } catch (err) {
-            console.error('Add video error:', err);
+            console.error('Add resource error:', err);
             const msg = err.response && err.response.data && err.response.data.message
                 ? err.response.data.message
-                : 'Failed to add video. The server encountered an issue.';
+                : 'Failed to add resource. The server encountered an issue.';
             setFormError(msg);
         } finally {
             setSubmitting(false);
@@ -510,9 +510,9 @@ export default function Resources() {
                             <div className="alert alert-danger bg-danger-subtle border-0 rounded-4 p-4 text-center">
                                 <h4 className="alert-heading fw-bold">Oops! Something went wrong</h4>
                                 <p className="mb-3">{fetchError}</p>
-                                <button className="btn btn-danger px-4" onClick={() => loadVideos(semester, course)}>Try Again</button>
+                                <button className="btn btn-danger px-4" onClick={() => loadResources(semester, course)}>Try Again</button>
                             </div>
-                        ) : videos.length === 0 ? (
+                        ) : resources.length === 0 ? (
                             <div className="text-center py-5 border border-secondary border-dashed rounded-4" style={{ borderStyle: 'dashed' }}>
                                 <div style={{ fontSize: '3.5rem' }}>📂</div>
                                 <h3 className="mt-4 fw-bold">No resources yet</h3>
@@ -522,11 +522,11 @@ export default function Resources() {
                         ) : (
                             <>
                                 <div className="res-video-grid">
-                                    {paginatedVideos.map(v => {
+                                    {paginatedResources.map(v => {
                                         const isFile = !!v.file_path;
                                     const isYoutube = !isFile && !!v.url && /youtu\.be|youtube\.com/.test(v.url);
                                     const isExternalLink = !isFile && !isYoutube && !!v.url;
-                                    const isPlaying = activeVideo === v.id;
+                                    const isPlaying = activeYoutubeClip === v.id;
                                     const embedUrl = isYoutube ? getEmbedUrl(v.url) : null;
 
                                     return (
@@ -536,11 +536,11 @@ export default function Resources() {
                                             onClick={() => {
                                                 if (isFile || isExternalLink) {
                                                     const href = isFile
-                                                        ? `http://127.0.0.1:8000/storage/${v.file_path}`
+                                                        ? `${(import.meta.env.VITE_API_URL || window.location.origin).replace(/\/api$/, '')}/storage/${v.file_path}`
                                                         : v.url;
                                                     window.open(href, '_blank');
                                                 } else if (isYoutube && !isPlaying) {
-                                                    setActiveVideo(v.id);
+                                                    setActiveYoutubeClip(v.id);
                                                 }
                                             }}
                                         >
@@ -590,7 +590,7 @@ export default function Resources() {
                                                         📤 Uploaded by <strong>{v.uploader_name || 'Anonymous'}</strong>
                                                     </span>
                                                     {isFile ? (
-                                                        <a href={`http://127.0.0.1:8000/storage/${v.file_path}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="btn btn-sm btn-outline-success fw-bold rounded-pill px-3">
+                                                        <a href={`${(import.meta.env.VITE_API_URL || window.location.origin).replace(/\/api$/, '')}/storage/${v.file_path}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="btn btn-sm btn-outline-success fw-bold rounded-pill px-3">
                                                             Download / View
                                                         </a>
                                                     ) : isExternalLink ? (
@@ -662,7 +662,7 @@ export default function Resources() {
                             </div>
                         )}
 
-                        <form onSubmit={handleAddVideo}>
+                        <form onSubmit={handleAddResource}>
                             <div className="mb-3">
                                 <label className="form-label small text-secondary fw-bold">RESOURCE TITLE</label>
                                 <input
@@ -736,7 +736,7 @@ export default function Resources() {
                                     name="description"
                                     className="form-control bg-white border-secondary bg-opacity-10 text-dark p-2 px-3"
                                     rows="3"
-                                    placeholder="What does this video cover?"
+                                    placeholder="What does this resource cover?"
                                     value={form.description}
                                     onChange={handleFormChange}
                                 />
