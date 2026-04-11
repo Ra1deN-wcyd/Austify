@@ -80,12 +80,3 @@ jobs:
 
       - name: Execute tests
         run: php artisan test --stop-on-failure
-        env:
-          DB_CONNECTION: sqlsrv
-          DB_HOST: 127.0.0.1
-          DB_PORT: 1433
-          DB_DATABASE: tempdb
-          DB_USERNAME: sa
-          DB_PASSWORD: Password123!
-          DB_ENCRYPT: optional
-          DB_TRUST_SERVER_CERTIFICATE: true
