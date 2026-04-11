@@ -1,0 +1,27 @@
+name: Austify CI-CD
+
+on:
+  push:
+    branches: [ "develop", "tamjid" ]
+  pull_request:
+    branches: [ "develop" ]
+
+jobs:
+  # Job 1: Testing the logic
+  test-logic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, dom, fileinfo, sqlsrv, pdo_sqlsrv
+
+      - name: Install Dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Run Tests
+        # This will run any tests in your 'tests' folder
+        run: php artisan test
