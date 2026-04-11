@@ -81,9 +81,9 @@ jobs:
           DB_TRUST_SERVER_CERTIFICATE: true
 
   build-and-push:
-    # Logic: Only build if tests pass AND we are on the 'devolop' branch
+    # Logic: Only build if tests pass AND we are on the 'devolop' or 'tamjid' branch
     needs: test-logic
-    if: github.ref == 'refs/heads/devolop'
+    if: github.ref == 'refs/heads/devolop' || github.ref == 'refs/heads/tamjid'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
