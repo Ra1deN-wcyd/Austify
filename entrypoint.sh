@@ -35,10 +35,19 @@ echo "[migrate] Running migrations..."
 php artisan migrate --force
 echo "[migrate] Done."
 
-# --- 5. Seed admin user ---
-echo "[seed] Seeding admin user..."
-php artisan db:seed --class=AdminSeeder --force
-echo "[seed] Done."
+# --- 5. Create admin user from env variables ---
+echo "[seed] Creating admin user..."
+php artisan tinker --execute="
+\App\Models\User::updateOrCreate(
+    ['email' => env('ADMIN_EMAIL')],
+    [
+        'name' => 'Admin',
+        'password' => bcrypt(env('ADMIN_PASSWORD')),
+        'points' => (int) env('ADMIN_POINTS', 0),
+    ]
+);
+"
+echo "[seed] Admin user ready."
 
 # --- 6. Cache config for production ---
 php artisan config:cache
