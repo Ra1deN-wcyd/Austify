@@ -44,6 +44,8 @@ php artisan tinker --execute="
         'name' => 'Admin',
         'password' => bcrypt(env('ADMIN_PASSWORD')),
         'points' => (int) env('ADMIN_POINTS', 0),
+        'role' => 'admin',
+        'github_link' => null,
     ]
 );
 "
