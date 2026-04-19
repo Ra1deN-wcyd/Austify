@@ -7,13 +7,17 @@ import Pusher from 'pusher-js';
 window.Pusher = Pusher;
 const getEcho = () => {
     const token = localStorage.getItem('austify_token');
-    const authEndpoint = import.meta.env.VITE_BROADCAST_AUTH_ENDPOINT ?? 'http://127.0.0.1:8000/api/broadcasting/auth';
+    const authEndpoint = import.meta.env.VITE_BROADCAST_AUTH_ENDPOINT ?? 'http://127.0.0.1:8100/api/broadcasting/auth';
+    const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY;
     
-    if (!token) return null;
+    if (!token || !pusherKey) {
+        console.warn('Echo: Missing token or VITE_PUSHER_APP_KEY. Realtime features disabled.');
+        return null;
+    }
 
     return new Echo({
         broadcaster: 'pusher',
-        key: import.meta.env.VITE_PUSHER_APP_KEY,
+        key: pusherKey,
         cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER ?? 'ap2',
         forceTLS: true,
         authEndpoint: authEndpoint,
