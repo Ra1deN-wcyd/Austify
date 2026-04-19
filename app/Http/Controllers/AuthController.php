@@ -233,7 +233,7 @@ class AuthController extends Controller
 
     private function frontendUrl(): string
     {
-        $frontendUrl = env('APP_FRONTEND_URL') ?: env('APP_URL', 'http://localhost:8000');
+        $frontendUrl = env('APP_FRONTEND_URL') ?: env('APP_URL', 'http://localhost:8100');
 
         return rtrim((string) $frontendUrl, '/');
     }

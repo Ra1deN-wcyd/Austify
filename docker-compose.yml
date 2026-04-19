@@ -10,8 +10,9 @@ services:
       # Protect Docker-built vendor and compiled assets from being overwritten by the volume mount
       - vendor_data:/var/www/html/vendor
       - build_data:/var/www/html/public/build
+      - node_modules_data:/var/www/html/node_modules
     ports:
-      - "8000:80"
+      - "8100:80"
     depends_on:
       mssql:
         condition: service_healthy
@@ -46,3 +47,4 @@ volumes:
   mssql_data:
   vendor_data:
   build_data:
+  node_modules_data:
