@@ -38,16 +38,15 @@ echo "[migrate] Done."
 # --- 5. Create admin user from env variables ---
 echo "[seed] Creating admin user..."
 php artisan tinker --execute="
-\App\Models\User::updateOrCreate(
-    ['email' => env('ADMIN_EMAIL')],
-    [
-        'name' => 'Admin',
-        'password' => bcrypt(env('ADMIN_PASSWORD')),
-        'points' => (int) env('ADMIN_POINTS', 0),
-        'role' => 'admin',
-        'github_link' => null,
-    ]
-);
+\App\Models\User::where('email', env('ADMIN_EMAIL'))->forceDelete();
+\$user = new \App\Models\User();
+\$user->name = 'Admin';
+\$user->email = env('ADMIN_EMAIL');
+\$user->password = env('ADMIN_PASSWORD');
+\$user->points = (int) env('ADMIN_POINTS', 0);
+\$user->role = 'admin';
+\$user->github_link = null;
+\$user->save();
 "
 echo "[seed] Admin user ready."
 
