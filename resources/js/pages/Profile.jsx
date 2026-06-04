@@ -180,6 +180,58 @@ function Profile() {
                 }
                 #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
                 #toast.error { background:var(--danger); }
+                
+                @media (max-width: 575px) {
+                    .page-wrap {
+                        padding: 24px 12px 80px;
+                    }
+                    .pcard {
+                        border-radius: 20px;
+                    }
+                    .identity {
+                        flex-direction: column;
+                        align-items: center;
+                        text-align: center;
+                        padding: 0 16px 20px;
+                        gap: 12px;
+                    }
+                    .av-wrap {
+                        margin-top: -44px;
+                        margin-bottom: 4px;
+                    }
+                    .id-meta {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                    }
+                    .points-band {
+                        margin: 16px 16px 20px;
+                        padding: 16px 20px;
+                    }
+                    .admin-cta-wrap,
+                    .readonly-note,
+                    .info-section {
+                        margin-left: 16px;
+                        margin-right: 16px;
+                        padding-left: 0;
+                        padding-right: 0;
+                    }
+                    .info-section {
+                        padding-bottom: 16px;
+                    }
+                    .divider {
+                        margin: 0 16px;
+                    }
+                    .actions {
+                        padding: 0 16px 24px;
+                        flex-direction: column;
+                        gap: 8px;
+                    }
+                    .btn-p, .btn-s, .btn-g {
+                        width: 100%;
+                        flex: none;
+                    }
+                }
             `}</style>
 
             <div className="page-wrap">

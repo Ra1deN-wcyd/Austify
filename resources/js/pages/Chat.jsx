@@ -39,6 +39,8 @@ export default function Chat() {
     const [isTyping, setIsTyping] = useState(false);
     const [typingUser, setTypingUser] = useState(null);
     const [loading, setLoading] = useState(false);
+    // Mobile: 'list' shows sidebar, 'chat' shows message pane
+    const [mobileView, setMobileView] = useState('list');
 
     const messagesEndRef = useRef(null);
     const typingTimeout = useRef(null);
@@ -103,8 +105,9 @@ export default function Chat() {
 
     // ── Open a conversation ───────────────────────────────────────────────────
     const openConversation = async (conv) => {
-        if (activeConv?.id === conv.id) return;
+        if (activeConv?.id === conv.id) { setMobileView('chat'); return; }
         setActiveConv(conv);
+        setMobileView('chat');   // switch to chat pane on mobile
         setMessages([]); // Clear viewport immediately
         setLoading(true);
         try {
@@ -194,13 +197,51 @@ export default function Chat() {
 
     // ─────────────────────────────────────────────────────────────────────────
     return (
-        <div style={{ display: 'flex', height: 'calc(100vh - 56px)', background: '#f0f2f5' }}>
+        <>
+        <style>{`
+            .chat-layout {
+                display: flex;
+                height: calc(100vh - 56px);
+                background: #f0f2f5;
+                overflow: hidden;
+            }
+            .chat-sidebar {
+                width: 320px;
+                min-width: 280px;
+                background: #fff;
+                border-right: 1px solid #e0e0e0;
+                display: flex;
+                flex-direction: column;
+                flex-shrink: 0;
+            }
+            .chat-window {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+            }
+            .chat-back-btn {
+                display: none;
+                background: none;
+                border: none;
+                color: #48bb78;
+                font-size: 20px;
+                cursor: pointer;
+                padding: 0 8px 0 0;
+                line-height: 1;
+            }
+            @media (max-width: 767px) {
+                .chat-sidebar  { width: 100%; min-width: unset; border-right: none; }
+                .chat-window   { width: 100%; }
+                .chat-sidebar.mobile-hidden  { display: none; }
+                .chat-window.mobile-hidden   { display: none; }
+                .chat-back-btn { display: inline-block; }
+            }
+        `}</style>
+        <div className="chat-layout">
 
             {/* ── Sidebar ── */}
-            <div style={{
-                width: '320px', background: '#fff', borderRight: '1px solid #e0e0e0',
-                display: 'flex', flexDirection: 'column'
-            }}>
+            <div className={`chat-sidebar${mobileView === 'chat' ? ' mobile-hidden' : ''}`}>
                 <div style={{ padding: '16px', borderBottom: '1px solid #e0e0e0' }}>
                     <h5 className="mb-2 fw-bold text-success">💬 Messages</h5>
                     <input
@@ -303,7 +344,7 @@ export default function Chat() {
             </div>
 
             {/* ── Chat Window ── */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <div className={`chat-window${mobileView === 'list' ? ' mobile-hidden' : ''}`}>
                 {!activeConv ? (
                     <div style={{
                         flex: 1, display: 'flex', flexDirection: 'column',
@@ -320,11 +361,17 @@ export default function Chat() {
                             borderBottom: '1px solid #e0e0e0',
                             display: 'flex', alignItems: 'center', gap: '12px'
                         }}>
+                            {/* Back button — visible only on mobile */}
+                            <button
+                                className="chat-back-btn"
+                                onClick={() => setMobileView('list')}
+                                aria-label="Back to conversations"
+                            >←</button>
                             <div style={{
                                 width: 40, height: 40, borderRadius: '50%',
                                 background: '#48bb78', color: '#fff',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontWeight: 'bold', fontSize: '16px'
+                                fontWeight: 'bold', fontSize: '16px', flexShrink: 0
                             }}>
                                 {getOtherUser(activeConv)?.name?.[0]?.toUpperCase() ?? '?'}
                             </div>
@@ -413,5 +460,6 @@ export default function Chat() {
                 )}
             </div>
         </div>
+        </>
     );
 }

@@ -48,9 +48,16 @@ function OAuthCallback() {
                     await hydrateGoogleSession(token);
                 }
 
+                // Clean the URL so the token is no longer visible
                 window.history.replaceState({}, document.title, '/auth/callback');
+
+                // Give React one tick to flush the user-state update inside
+                // AuthContext before we navigate to a PrivateRoute.
+                await new Promise((r) => setTimeout(r, 100));
+
                 navigate('/home', { replace: true });
-            } catch {
+            } catch (err) {
+                console.error('[OAuthCallback] login failed:', err);
                 setStatus('Could not finish Google sign-in. Redirecting to login...');
                 setTimeout(() => navigate('/login', { replace: true }), 2500);
             }

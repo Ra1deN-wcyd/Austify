@@ -107,7 +107,10 @@ class GoogleAuthController extends Controller
 
     private function frontendUrl(): string
     {
-        $frontendUrl = env('APP_FRONTEND_URL') ?: env('APP_URL', 'http://localhost:8100');
+        // In production / Docker the React SPA is served from the same origin
+        // as Laravel, so APP_URL is the correct base.  APP_FRONTEND_URL is only
+        // useful when running `npm run dev` (Vite) on a separate port locally.
+        $frontendUrl = env('APP_URL', 'http://localhost:8100');
 
         return rtrim((string) $frontendUrl, '/');
     }
