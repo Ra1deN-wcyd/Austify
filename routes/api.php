@@ -158,6 +158,13 @@ Route::middleware(['auth:sanctum', 'enforce.restrictions'])->group(function () {
     });
 
 
+    // ================= BROADCASTING AUTH =================
+    // Pusher calls this URL to authenticate private channel subscriptions.
+    // Must be inside sanctum auth middleware so we can verify the user.
+    Route::post('/broadcasting/auth', function (\Illuminate\Http\Request $request) {
+        return \Illuminate\Support\Facades\Broadcast::auth($request);
+    });
+
     // ================= CHAT =================
     Route::prefix('chat')->group(function () {
 
