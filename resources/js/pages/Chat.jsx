@@ -159,6 +159,47 @@ export default function Chat() {
         };
     }, [activeConv]);
 
+    // ── 3-second polling fallback ────────────────────────────────────────────
+    // Pusher private channels require /broadcasting/auth to work.
+    // Polling guarantees messages always arrive even if Pusher auth fails.
+    const lastMsgIdRef = useRef(0);
+    useEffect(() => {
+        if (!activeConv) return;
+        lastMsgIdRef.current = 0; // Reset on conversation switch
+
+        const poll = async () => {
+            try {
+                const res = await api.get(`/chat/conversations/${activeConv.id}/messages`);
+                const fetched = res.data.data?.data ?? [];
+                if (fetched.length === 0) return;
+
+                setMessages(prev => {
+                    const existingIds = new Set(prev.map(m => m.id));
+                    const newMsgs = fetched.filter(m => !existingIds.has(m.id));
+                    if (newMsgs.length === 0) return prev;
+                    // Merge & sort by created_at
+                    return [...prev, ...newMsgs].sort(
+                        (a, b) => new Date(a.created_at) - new Date(b.created_at)
+                    );
+                });
+
+                // Update sidebar last_message snippet
+                const latest = fetched[fetched.length - 1];
+                setConversations(prev =>
+                    prev.map(c => c.id === activeConv.id
+                        ? { ...c, last_message: latest, unread_count: 0 }
+                        : c
+                    )
+                );
+            } catch (e) {
+                // Silently ignore poll errors
+            }
+        };
+
+        const timer = setInterval(poll, 3000);
+        return () => clearInterval(timer);
+    }, [activeConv]);
+
     // ── Open a conversation ─────────────────────────────────────────────────
     const openConversation = async (conv) => {
         if (activeConv?.id === conv.id) { setMobileView('chat'); return; }
