@@ -346,6 +346,11 @@ const Problem = () => {
                 .animate__animated { animation-duration: 0.4s; }
                 .comment-container .delete-comment-btn { display: none; font-size: 1.2rem; }
                 .comment-container:hover .delete-comment-btn { display: inline-block; }
+                @media (max-width: 767px) {
+                    .comment-container .delete-comment-btn {
+                        display: inline-block !important;
+                    }
+                }
             `}</style>
         </div>
     );

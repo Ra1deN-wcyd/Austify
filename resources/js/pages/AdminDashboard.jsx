@@ -108,7 +108,8 @@ function AdminDashboard() {
 
             {error && <div className="alert alert-danger">{error}</div>}
 
-            <div className="table-responsive">
+            {/* Desktop Table View */}
+            <div className="table-responsive d-none d-md-block">
                 <table className="table table-dark table-striped table-bordered align-middle">
                     <thead>
                         <tr>
@@ -178,6 +179,81 @@ function AdminDashboard() {
                         })}
                     </tbody>
                 </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="d-md-none">
+                {loading ? (
+                    <div className="text-center text-white py-4">Loading users...</div>
+                ) : users.length === 0 ? (
+                    <div className="text-center text-white py-4">No users found.</div>
+                ) : (
+                    <div className="d-flex flex-column gap-3">
+                        {users.map((row) => {
+                            const rowTimedOut = isTimedOut(row);
+                            const isSelf = row.id === user.id;
+                            const actionLocked = busyUserId === row.id || row.role === 'admin';
+
+                            return (
+                                <div key={row.id} className="card bg-dark text-white border-secondary p-3">
+                                    <div className="card-body p-0">
+                                        <h5 className="fw-bold mb-1">{row.name}{isSelf ? ' (You)' : ''}</h5>
+                                        <p className="text-muted small mb-2">{row.email}</p>
+                                        
+                                        <div className="row g-2 mb-3">
+                                            <div className="col-6">
+                                                <span className="text-muted small d-block">ROLE</span>
+                                                <span className="text-capitalize small fw-bold">{row.role}</span>
+                                            </div>
+                                            <div className="col-6">
+                                                <span className="text-muted small d-block">BANNED</span>
+                                                <span className="small fw-bold">{row.is_banned ? '🔴 Yes' : '🟢 No'}</span>
+                                            </div>
+                                            <div className="col-12">
+                                                <span className="text-muted small d-block">TIMEOUT UNTIL</span>
+                                                <span className="small">{formatDate(row.timeout_until)}</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="border-top border-secondary pt-3">
+                                            <span className="text-muted small d-block mb-2">ACTIONS</span>
+                                            <div className="d-flex flex-wrap gap-2">
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    style={{ maxWidth: 130 }}
+                                                    value={selectedDuration[row.id] || '2_days'}
+                                                    onChange={(e) => setSelectedDuration((prev) => ({ ...prev, [row.id]: e.target.value }))}
+                                                    disabled={actionLocked}
+                                                >
+                                                    {timeoutOptions.map((option) => (
+                                                        <option key={option.value} value={option.value}>{option.label}</option>
+                                                    ))}
+                                                </select>
+                                                <button className="btn btn-warning btn-sm fw-bold" onClick={() => handleTimeout(row.id)} disabled={actionLocked}>
+                                                    Timeout
+                                                </button>
+                                                {rowTimedOut && (
+                                                    <button className="btn btn-secondary btn-sm fw-bold" onClick={() => handleUntimeout(row.id)} disabled={busyUserId === row.id}>
+                                                        Untimeout
+                                                    </button>
+                                                )}
+                                                {row.is_banned ? (
+                                                    <button className="btn btn-success btn-sm fw-bold" onClick={() => handleUnban(row.id)} disabled={busyUserId === row.id}>
+                                                        Unban
+                                                    </button>
+                                                ) : (
+                                                    <button className="btn btn-danger btn-sm fw-bold" onClick={() => handleBan(row.id)} disabled={actionLocked}>
+                                                        Ban
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -203,7 +203,7 @@ export default function Resources() {
 
                 .res-semester-grid {
                     display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                    grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr));
                     gap: 12px;
                     margin-bottom: 40px;
                 }
@@ -258,7 +258,7 @@ export default function Resources() {
 
                 .res-course-grid {
                     display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+                    grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
                     gap: 16px;
                     margin-top: 20px;
                 }
@@ -300,7 +300,7 @@ export default function Resources() {
 
                 .res-video-grid {
                     display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+                    grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
                     gap: 24px;
                     margin-top: 30px;
                 }
@@ -379,6 +379,16 @@ export default function Resources() {
                     display: flex; justify-content: space-between; align-items: center;
                     margin-bottom: 30px;
                 }
+                @media (max-width: 575px) {
+                    .res-toolbar {
+                        flex-direction: column;
+                        align-items: stretch;
+                        gap: 12px;
+                    }
+                    .res-toolbar .btn {
+                        width: 100%;
+                    }
+                }
                 
                 .res-btn-back {
                     background: transparent; border: 0; color: #555;
@@ -404,6 +414,11 @@ export default function Resources() {
                     width: 100%; max-width: 500px; padding: 32px;
                     box-shadow: 0 20px 60px rgba(0,0,0,0.2);
                     animation: resPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                }
+                @media (max-width: 575px) {
+                    .res-modal {
+                        padding: 20px 16px;
+                    }
                 }
                 @keyframes resPop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
             `}</style>

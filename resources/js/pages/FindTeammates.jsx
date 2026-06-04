@@ -85,10 +85,9 @@ const CSS = `
     font-weight: 700;
   }
 
-  /* ── Grid ── */
   .ft-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
     gap: 22px;
   }
 

@@ -224,10 +224,9 @@ const CSS = `
   }
   .btn-back-link:hover { color: #111; }
 
-  /* Grid for my posts */
   .my-posts-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
     gap: 20px;
   }
   .my-post-card {
@@ -250,6 +249,21 @@ const CSS = `
   .my-post-meta { font-size: 0.85rem; color: #555; margin-top: auto; padding-top: 16px; display: flex; justify-content: space-between; }
 
   .spinner-wrap { text-align: center; padding: 60px 0; color: #666; }
+
+  @media (max-width: 767px) {
+    .collab-panel {
+      padding: 20px 16px;
+    }
+    .req-card {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+      padding: 16px;
+    }
+    .req-actions {
+      justify-content: flex-end;
+    }
+  }
 `;
 
 export default function Collaboration() {
