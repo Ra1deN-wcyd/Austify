@@ -10,6 +10,7 @@ use App\Http\Controllers\VideoController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\AdminUserManagementController;
+use App\Http\Controllers\RoomPostController;
 
 /*
 |--------------------------------------------------------------------------
@@ -191,6 +192,36 @@ Route::middleware(['auth:sanctum', 'enforce.restrictions'])->group(function () {
         // 6. Typing Indicator
         // URL: http://127.0.0.1:8000/api/chat/typing
         Route::post('/typing', [ChatController::class, 'typing']);
+
+    });
+
+
+    // ================= ROOM POSTS =================
+    Route::prefix('room-posts')->group(function () {
+
+        // 1. List / Browse with filters
+        // URL: http://127.0.0.1:8000/api/room-posts
+        Route::get('/', [RoomPostController::class, 'index']);
+
+        // 2. Create a new room post
+        // URL: http://127.0.0.1:8000/api/room-posts
+        Route::post('/', [RoomPostController::class, 'store']);
+
+        // 3. View a single room post
+        // URL: http://127.0.0.1:8000/api/room-posts/{id}
+        Route::get('/{id}', [RoomPostController::class, 'show']);
+
+        // 4. Update a room post (owner only)
+        // URL: http://127.0.0.1:8000/api/room-posts/{id}
+        Route::put('/{id}', [RoomPostController::class, 'update']);
+
+        // 5. Delete a room post (owner only)
+        // URL: http://127.0.0.1:8000/api/room-posts/{id}
+        Route::delete('/{id}', [RoomPostController::class, 'destroy']);
+
+        // 6. Toggle active/filled status (owner only)
+        // URL: http://127.0.0.1:8000/api/room-posts/{id}/status
+        Route::patch('/{id}/status', [RoomPostController::class, 'toggleStatus']);
 
     });
 

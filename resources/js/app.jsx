@@ -17,6 +17,7 @@ import Chat from './pages/Chat';
 import Problem from './pages/Problem';
 import OAuthCallback from './pages/OAuthCallback';
 import AdminDashboard from './pages/AdminDashboard';
+import FindRoom from './pages/FindRoom';
 
 function App() {
     return (
@@ -36,6 +37,7 @@ function App() {
                     <Route path="/chat" element={<PrivateRoute><Chat /></PrivateRoute>} />
                     <Route path="/problem" element={<PrivateRoute><Problem /></PrivateRoute>} />
                     <Route path="/admin/dashboard" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
+                    <Route path="/find-room" element={<PrivateRoute><FindRoom /></PrivateRoute>} />
                     <Route path="/auth/callback" element={<OAuthCallback />} />
                 </Routes>
             </Router>
