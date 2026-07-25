@@ -288,6 +288,7 @@ function Navbar() {
                         <NavLink className={activeClass} to="/collaborations">Collaborate</NavLink>
                         <NavLink className={activeClass} to="/chat">Chat</NavLink>
                         <NavLink className={activeClass} to="/problem">Problems</NavLink>
+                        <NavLink className={activeClass} to="/find-room">Find Room</NavLink>
                         <NavLink className={activeClass} to="/resources">Resources</NavLink>
                     </div>
 
@@ -340,6 +341,7 @@ function Navbar() {
                     <NavLink className={activeClass} to="/collaborations" onClick={close}>👥 Collaborate</NavLink>
                     <NavLink className={activeClass} to="/chat" onClick={close}>💬 Chat</NavLink>
                     <NavLink className={activeClass} to="/problem" onClick={close}>🧩 Problems</NavLink>
+                    <NavLink className={activeClass} to="/find-room" onClick={close}>🏠 Find Room</NavLink>
                     <NavLink className={activeClass} to="/resources" onClick={close}>📂 Resources</NavLink>
                     {user && <NavLink className={activeClass} to="/profile" onClick={close}>👤 Profile</NavLink>}
                 </div>
@@ -366,9 +368,9 @@ function Navbar() {
                                 <span className="pw-bn-icon">🧩</span>
                                 <span>Problems</span>
                             </NavLink>
-                            <NavLink className={bnClass} to="/resources">
-                                <span className="pw-bn-icon">📂</span>
-                                <span>Resources</span>
+                            <NavLink className={bnClass} to="/find-room">
+                                <span className="pw-bn-icon">🏠</span>
+                                <span>Rooms</span>
                             </NavLink>
                             <NavLink className={bnClass} to="/profile">
                                 <span className="pw-bn-icon">👤</span>
